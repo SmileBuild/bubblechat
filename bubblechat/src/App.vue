@@ -33,19 +33,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import Sidebar from './components/layout/Sidebar.vue';
 import ChatContainer from './components/layout/ChatContainer.vue';
+import { sessionStorage } from './services/sessionStorage';
 
 // State
-const sessions = ref([
-  {
-    id: '1',
-    title: 'First Chat',
-    timestamp: new Date(),
-    messages: []
-  }
-]);
+const sessions = ref([]);
 const activeSessionId = ref('1');
 const isLoading = ref(false);
 const showAbout = ref(false);
@@ -55,6 +49,22 @@ const currentMessages = computed(() => {
   const session = sessions.value.find(s => s.id === activeSessionId.value);
   return session ? session.messages : [];
 });
+
+// Load sessions on mount
+onMounted(() => {
+  const savedSessions = sessionStorage.loadSessions();
+  if (savedSessions.length > 0) {
+    sessions.value = savedSessions;
+    activeSessionId.value = savedSessions[0].id;
+  } else {
+    createNewChat(); // Create initial chat if no saved sessions
+  }
+});
+
+// Watch for sessions changes
+watch(sessions, (newSessions) => {
+  sessionStorage.saveSessions(newSessions);
+}, { deep: true });
 
 // Methods
 const createNewChat = () => {
@@ -66,6 +76,20 @@ const createNewChat = () => {
   };
   sessions.value.unshift(newSession);
   activeSessionId.value = newSession.id;
+};
+
+const updateSession = (update) => {
+  sessions.value = sessionStorage.updateSession(sessions.value, update.id, {
+    title: update.title,
+    timestamp: new Date()
+  });
+};
+
+const removeSession = (sessionId) => {
+  sessions.value = sessionStorage.deleteSession(sessions.value, sessionId);
+  if (activeSessionId.value === sessionId) {
+    activeSessionId.value = sessions.value[0]?.id;
+  }
 };
 
 const selectSession = (id) => {
@@ -99,7 +123,11 @@ const handleSendMessage = async (content) => {
 
     // Update session title if it's the first message
     if (sessions.value[sessionIndex].messages.length === 2) {
-      sessions.value[sessionIndex].title = content.slice(0, 30) + (content.length > 30 ? '...' : '');
+      const newTitle = content.slice(0, 30) + (content.length > 30 ? '...' : '');
+      sessions.value = sessionStorage.updateSession(sessions.value, activeSessionId.value, {
+        title: newTitle,
+        timestamp: new Date()
+      });
     }
   }, 1000);
 };
