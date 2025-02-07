@@ -20,16 +20,32 @@ export const sessionStorage = {
   },
 
   updateSession(sessions, sessionId, updates) {
-    const updatedSessions = sessions.map(session => 
-      session.id === sessionId ? { ...session, ...updates } : session
-    );
-    this.saveSessions(updatedSessions);
-    return updatedSessions;
+    try {
+      const sessionIndex = sessions.findIndex(s => s.id === sessionId);
+      if (sessionIndex === -1) return null;
+
+      const updatedSessions = [...sessions];
+      updatedSessions[sessionIndex] = {
+        ...updatedSessions[sessionIndex],
+        ...updates
+      };
+
+      this.saveSessions(updatedSessions);
+      return updatedSessions;
+    } catch (error) {
+      console.error('Error updating session:', error);
+      return null;
+    }
   },
 
   deleteSession(sessions, sessionId) {
-    const updatedSessions = sessions.filter(session => session.id !== sessionId);
-    this.saveSessions(updatedSessions);
-    return updatedSessions;
+    try {
+      const updatedSessions = sessions.filter(session => session.id !== sessionId);
+      this.saveSessions(updatedSessions);
+      return updatedSessions;
+    } catch (error) {
+      console.error('Error deleting session:', error);
+      return sessions;
+    }
   }
 };

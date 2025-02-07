@@ -7,6 +7,8 @@
       @new-chat="createNewChat"
       @select-session="selectSession"
       @show-about="showAbout = true"
+      @update-session="updateSession"
+      @remove-session="removeSession"
     />
     <ChatContainer 
       :messages="currentMessages"
@@ -79,10 +81,13 @@ const createNewChat = () => {
 };
 
 const updateSession = (update) => {
-  sessions.value = sessionStorage.updateSession(sessions.value, update.id, {
+  const updatedSessions = sessionStorage.updateSession(sessions.value, update.id, {
     title: update.title,
     timestamp: new Date()
   });
+  if (updatedSessions) {
+    sessions.value = updatedSessions;
+  }
 };
 
 const removeSession = (sessionId) => {

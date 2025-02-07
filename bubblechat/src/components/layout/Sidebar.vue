@@ -75,10 +75,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import SettingsModal from '../SettingsModal.vue';
 
-defineProps({
+const props = defineProps({
   sessions: {
     type: Array,
     default: () => []
@@ -115,17 +115,36 @@ const startEditing = (session) => {
 
 const saveSessionTitle = (session) => {
   const newTitle = editTitles.value[session.id]?.trim();
-  if (newTitle) {
+  if (!newTitle) {
+    cancelEditing();
+    return;
+  }
+
+  if (newTitle !== session.title) {
     emit('update-session', {
       id: session.id,
       title: newTitle
     });
   }
-  cancelEditing();
+  
+  // Clear editing state after successful update
+  editingSessionId.value = null;
+  editTitles.value = {};
 };
 
 const cancelEditing = () => {
   editingSessionId.value = null;
   editTitles.value = {};
 };
+
+// Watch sessions prop for changes to refresh UI
+watch(() => props.sessions, (newSessions) => {
+  // If currently editing and the session was updated, clear editing state
+  if (editingSessionId.value) {
+    const editingSession = newSessions.find(s => s.id === editingSessionId.value);
+    if (editingSession && editingSession.title !== editTitles.value[editingSessionId.value]) {
+      cancelEditing();
+    }
+  }
+}, { deep: true });
 </script>
