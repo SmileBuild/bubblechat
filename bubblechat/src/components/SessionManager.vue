@@ -22,6 +22,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import Sidebar from './layout/Sidebar.vue';
 import ChatContainer from './layout/ChatContainer.vue';
+import { ChatService } from '../services/ChatService';
 
 // Settings helper
 const getAPISettings = (providerId) => {
@@ -42,12 +43,22 @@ const currentAPI = ref({
 });
 
 // Load saved API selection
-const loadCurrentAPI = () => {
+onMounted(() => {
   const savedAPI = localStorage.getItem('current-api');
   if (savedAPI) {
     currentAPI.value = JSON.parse(savedAPI);
   }
-};
+});
+
+// Create chat service instance
+const chatService = computed(() => {
+  const settings = getAPISettings(currentAPI.value.provider);
+  return new ChatService(
+    currentAPI.value.provider,
+    currentAPI.value.model,
+    settings
+  );
+});
 
 // State
 const STORAGE_KEY = 'bubblechat-sessions';
@@ -114,13 +125,12 @@ const currentMessages = computed(() => {
 
 // Load sessions on mount
 onMounted(() => {
-  loadCurrentAPI();
   const savedSessions = loadSessions();
   if (savedSessions.length > 0) {
     sessions.value = savedSessions;
     activeSessionId.value = savedSessions[0].id;
   } else {
-    createNewChat(); // Create initial chat if no saved sessions
+    createNewChat();
   }
 });
 
@@ -164,104 +174,64 @@ const selectSession = (id) => {
 
 const handleAPIChange = (selection) => {
   currentAPI.value = selection;
+  localStorage.setItem('current-api', JSON.stringify(selection));
 };
 
 const handleSettingsSave = (settings) => {
   // Settings are already saved to localStorage by SettingsModal
 };
 
-const handleSendMessage = async (content) => {
-  const sessionIndex = sessions.value.findIndex(s => s.id === activeSessionId.value);
+const addMessage = (sessionId, message) => {
+  const sessionIndex = sessions.value.findIndex(s => s.id === sessionId);
   if (sessionIndex === -1) return;
 
-  const settings = getAPISettings(currentAPI.value.provider);
-  if (!settings?.apiKey || !settings?.baseUrl) {
-    alert('Please configure your API settings first');
-    return;
-  }
-
-  // Add user message
-  const userMessage = {
+  const newMessage = {
     id: Date.now().toString(),
-    content,
-    sender: 'user',
+    ...message,
     timestamp: new Date()
   };
-  sessions.value[sessionIndex].messages.push(userMessage);
 
-  // Get bot response
-  isLoading.value = true;
+  sessions.value[sessionIndex].messages.push(newMessage);
+
+  // Update session title if it's the first message
+  if (sessions.value[sessionIndex].messages.length === 1 && message.sender === 'user') {
+    const newTitle = message.content.slice(0, 30) + (message.content.length > 30 ? '...' : '');
+    sessions.value = updateStorageSession(sessions.value, sessionId, {
+      title: newTitle,
+      timestamp: new Date()
+    });
+  }
+};
+
+const handleSendMessage = async (content) => {
+  if (!activeSessionId.value) return;
+
   try {
-    const requestBody = {
-      messages: [{ role: "user", content }],
-      model: currentAPI.value.model,
-      stream: false
-    };
+    // Add user message
+    addMessage(activeSessionId.value, {
+      content,
+      sender: 'user'
+    });
 
-    let headers = {
-      'Content-Type': 'application/json'
-    };
+    isLoading.value = true;
 
-    // Set provider-specific headers and endpoints
-    if (currentAPI.value.provider === 'deepseek') {
-      headers['Authorization'] = `Bearer ${settings.apiKey}`;
-      const response = await fetch(`${settings.baseUrl}/chat/completions`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(requestBody)
-      });
+    // Get conversation history for context
+    const session = sessions.value.find(s => s.id === activeSessionId.value);
+    const messageHistory = session?.messages || [];
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+    // Send to API
+    const response = await chatService.value.sendMessage(content, messageHistory);
 
-      const data = await response.json();
-      
-      const botMessage = {
-        id: Date.now().toString(),
-        content: data.choices[0].message.content,
-        sender: 'bot',
-        timestamp: new Date()
-      };
-      sessions.value[sessionIndex].messages.push(botMessage);
-    } else if (currentAPI.value.provider === 'anthropic') {
-      headers['x-api-key'] = settings.apiKey;
-      headers['anthropic-version'] = '2023-06-01';
-      const response = await fetch(`${settings.baseUrl}/v1/messages`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          ...requestBody,
-          max_tokens: 1024
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      const botMessage = {
-        id: Date.now().toString(),
-        content: data.content,
-        sender: 'bot',
-        timestamp: new Date()
-      };
-      sessions.value[sessionIndex].messages.push(botMessage);
-    }
-
-    // Update session title if it's the first message
-    if (sessions.value[sessionIndex].messages.length === 2) {
-      const newTitle = content.slice(0, 30) + (content.length > 30 ? '...' : '');
-      sessions.value = updateStorageSession(sessions.value, activeSessionId.value, {
-        title: newTitle,
-        timestamp: new Date()
-      });
-    }
+    // Add API response
+    addMessage(activeSessionId.value, response);
   } catch (error) {
     console.error('API Error:', error);
-    alert(`Error: ${error.message}`);
+    
+    // Add error message to chat
+    addMessage(activeSessionId.value, {
+      content: `Error: ${error.message}`,
+      sender: 'error'
+    });
   } finally {
     isLoading.value = false;
   }

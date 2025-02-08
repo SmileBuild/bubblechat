@@ -3,12 +3,13 @@
     <!-- Chat Messages -->
     <div class="flex-1 overflow-y-auto p-4 space-y-4" ref="messagesContainer">
       <div v-for="message in messages" :key="message.id" 
-           :class="['flex', message.sender === 'user' ? 'justify-end' : 'justify-start']">
-        <div :class="['max-w-3xl p-4 rounded-lg', 
-                      message.sender === 'user' 
-                      ? 'bg-primary text-white' 
-                      : 'bg-surface text-gray-100']">
-          {{ message.content }}
+           :class="['flex', messageTypes[message.sender].align]">
+        <div :class="[
+          'max-w-3xl p-4 rounded-lg',
+          messageTypes[message.sender].class
+        ]">
+          <div v-if="message.sender === 'assistant'" v-html="renderMarkdown(message.content)" />
+          <div v-else>{{ message.content }}</div>
         </div>
       </div>
       <div v-if="isLoading" class="flex justify-start">
@@ -33,7 +34,7 @@
         />
         <button
           type="submit"
-          :disabled="!newMessage.trim()"
+          :disabled="!newMessage.trim() || isLoading"
           class="bg-primary hover:bg-primary/90 disabled:bg-gray-600 text-white rounded-lg px-6 py-2"
         >
           Send
@@ -44,7 +45,11 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
+import { marked } from 'marked';
+import hljs from 'highlight.js';
+import DOMPurify from 'dompurify';
+import 'highlight.js/styles/github-dark.css';
 
 const props = defineProps({
   messages: {
@@ -62,9 +67,47 @@ const emit = defineEmits(['send-message']);
 const newMessage = ref('');
 const messagesContainer = ref(null);
 
+// Message type styling configuration
+const messageTypes = {
+  user: {
+    class: 'bg-primary text-white',
+    align: 'justify-end'
+  },
+  assistant: {
+    class: 'bg-surface text-gray-100 markdown-body',
+    align: 'justify-start'
+  },
+  error: {
+    class: 'bg-red-500/20 text-red-300',
+    align: 'justify-center'
+  }
+};
+
+// Configure marked with syntax highlighting
+onMounted(() => {
+  marked.setOptions({
+    highlight: function(code, lang) {
+      const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+      return hljs.highlight(code, { language }).value;
+    },
+    langPrefix: 'hljs language-'
+  });
+});
+
+// Render markdown with syntax highlighting and sanitization
+const renderMarkdown = (content) => {
+  try {
+    const html = marked(content);
+    return DOMPurify.sanitize(html);
+  } catch (error) {
+    console.error('Markdown rendering error:', error);
+    return content;
+  }
+};
+
 const sendMessage = () => {
   const message = newMessage.value.trim();
-  if (message) {
+  if (message && !props.isLoading) {
     emit('send-message', message);
     newMessage.value = '';
   }
@@ -79,3 +122,57 @@ watch(() => props.messages.length, () => {
   }, 0);
 });
 </script>
+
+<style>
+/* Markdown styling */
+.markdown-body {
+  color: #e5e7eb; /* text-gray-200 */
+}
+
+.markdown-body pre {
+  background-color: #1f2937; /* gray-800 */
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+.markdown-body code {
+  background-color: #374151; /* gray-700 */
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.markdown-body pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+.markdown-body p {
+  margin: 1rem 0;
+}
+
+.markdown-body ul, .markdown-body ol {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+.markdown-body li {
+  margin: 0.5rem 0;
+}
+
+.markdown-body blockquote {
+  border-left: 4px solid #4b5563; /* gray-600 */
+  margin: 1rem 0;
+  padding-left: 1rem;
+  color: #9ca3af; /* gray-400 */
+}
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3, 
+.markdown-body h4, .markdown-body h5, .markdown-body h6 {
+  margin: 1.5rem 0 1rem;
+  font-weight: 600;
+}
+</style>
