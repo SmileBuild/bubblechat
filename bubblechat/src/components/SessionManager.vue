@@ -7,7 +7,8 @@
       @select-session="selectSession"
       @show-about="$emit('show-about')"
       @update-session="updateSession"
-      @remove-session="removeSession"
+      @update-settings="handleSettingsSave"
+      @update-api="handleAPIChange"
     />
     <ChatContainer 
       :messages="currentMessages"
@@ -23,14 +24,28 @@ import Sidebar from './layout/Sidebar.vue';
 import ChatContainer from './layout/ChatContainer.vue';
 
 // Settings helper
-const getAPISettings = () => {
+const getAPISettings = (providerId) => {
   try {
     const settings = localStorage.getItem('api-settings');
     if (!settings) return null;
-    return JSON.parse(settings)?.deepseek;
+    return JSON.parse(settings)?.[providerId];
   } catch (error) {
     console.error('Error loading API settings:', error);
     return null;
+  }
+};
+
+// API State
+const currentAPI = ref({
+  provider: 'deepseek',
+  model: 'deepseek-chat'
+});
+
+// Load saved API selection
+const loadCurrentAPI = () => {
+  const savedAPI = localStorage.getItem('current-api');
+  if (savedAPI) {
+    currentAPI.value = JSON.parse(savedAPI);
   }
 };
 
@@ -99,6 +114,7 @@ const currentMessages = computed(() => {
 
 // Load sessions on mount
 onMounted(() => {
+  loadCurrentAPI();
   const savedSessions = loadSessions();
   if (savedSessions.length > 0) {
     sessions.value = savedSessions;
@@ -146,11 +162,19 @@ const selectSession = (id) => {
   activeSessionId.value = id;
 };
 
+const handleAPIChange = (selection) => {
+  currentAPI.value = selection;
+};
+
+const handleSettingsSave = (settings) => {
+  // Settings are already saved to localStorage by SettingsModal
+};
+
 const handleSendMessage = async (content) => {
   const sessionIndex = sessions.value.findIndex(s => s.id === activeSessionId.value);
   if (sessionIndex === -1) return;
 
-  const settings = getAPISettings();
+  const settings = getAPISettings(currentAPI.value.provider);
   if (!settings?.apiKey || !settings?.baseUrl) {
     alert('Please configure your API settings first');
     return;
@@ -168,31 +192,64 @@ const handleSendMessage = async (content) => {
   // Get bot response
   isLoading.value = true;
   try {
-    const response = await fetch(`${settings.baseUrl}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${settings.apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        messages: [{ role: "user", content }],
-        model: settings.model || "deepseek-chat", // Default to deepseek-chat if no model specified
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const completion = await response.json();
-    
-    const botMessage = {
-      id: Date.now().toString(),
-      content: completion.choices[0].message.content,
-      sender: 'bot',
-      timestamp: new Date()
+    const requestBody = {
+      messages: [{ role: "user", content }],
+      model: currentAPI.value.model,
+      stream: false
     };
-    sessions.value[sessionIndex].messages.push(botMessage);
+
+    let headers = {
+      'Content-Type': 'application/json'
+    };
+
+    // Set provider-specific headers and endpoints
+    if (currentAPI.value.provider === 'deepseek') {
+      headers['Authorization'] = `Bearer ${settings.apiKey}`;
+      const response = await fetch(`${settings.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      const botMessage = {
+        id: Date.now().toString(),
+        content: data.choices[0].message.content,
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      sessions.value[sessionIndex].messages.push(botMessage);
+    } else if (currentAPI.value.provider === 'anthropic') {
+      headers['x-api-key'] = settings.apiKey;
+      headers['anthropic-version'] = '2023-06-01';
+      const response = await fetch(`${settings.baseUrl}/v1/messages`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          ...requestBody,
+          max_tokens: 1024
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      const botMessage = {
+        id: Date.now().toString(),
+        content: data.content,
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      sessions.value[sessionIndex].messages.push(botMessage);
+    }
 
     // Update session title if it's the first message
     if (sessions.value[sessionIndex].messages.length === 2) {

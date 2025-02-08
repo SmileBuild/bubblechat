@@ -6,6 +6,14 @@
       @save="handleSettingsSave"
     />
     
+    <APISelector
+      :is-open="isAPISelectorOpen"
+      :current-provider="currentAPI.provider"
+      :current-model="currentAPI.model"
+      @close="isAPISelectorOpen = false"
+      @save="handleAPISelect"
+    />
+    
     <!-- New Chat Button -->
     <div class="p-4">
       <button @click="$emit('new-chat')" class="w-full bg-primary hover:bg-primary/90 text-white rounded-lg py-2 px-4 flex items-center justify-center gap-2">
@@ -62,6 +70,15 @@
 
     <!-- Footer Buttons -->
     <div class="mt-auto p-4 border-t border-gray-700 flex flex-col gap-2">
+      <!-- API Selection Button -->
+      <button @click="isAPISelectorOpen = true" class="w-full text-gray-400 hover:text-white py-2 px-4 rounded-lg flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="material-icons text-xl">api</span>
+          <span class="flex-1 text-left">API</span>
+        </div>
+        <div class="text-sm opacity-75">{{ currentAPIDisplay }}</div>
+      </button>
+      
       <button @click="isSettingsOpen = true" class="w-full text-gray-400 hover:text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2">
         <span class="material-icons text-xl">settings</span>
         Settings
@@ -75,8 +92,9 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed, onMounted } from 'vue';
 import SettingsModal from '../SettingsModal.vue';
+import APISelector from '../APISelector.vue';
 
 const props = defineProps({
   sessions: {
@@ -89,12 +107,41 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['new-chat', 'select-session', 'show-about', 'remove-session', 'update-session', 'update-settings']);
+const emit = defineEmits(['new-chat', 'select-session', 'show-about', 'remove-session', 'update-session', 'update-settings', 'update-api']);
 
 const isSettingsOpen = ref(false);
+const isAPISelectorOpen = ref(false);
 const editingSessionId = ref(null);
 const editTitles = ref({});
 const inputRefs = ref({});
+
+// API Selection state
+const currentAPI = ref({
+  provider: 'deepseek',
+  model: 'deepseek-chat'
+});
+
+const currentAPIDisplay = computed(() => {
+  const provider = currentAPI.value.provider === 'deepseek' ? 'DeepSeek' : 'Anthropic';
+  const model = currentAPI.value.model.split('-').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1)
+  ).join(' ');
+  return `${provider} - ${model}`;
+});
+
+// Load current API settings on mount
+onMounted(() => {
+  const savedAPI = localStorage.getItem('current-api');
+  if (savedAPI) {
+    currentAPI.value = JSON.parse(savedAPI);
+  }
+});
+
+const handleAPISelect = (selection) => {
+  currentAPI.value = selection;
+  localStorage.setItem('current-api', JSON.stringify(selection));
+  emit('update-api', selection);
+};
 
 const formatDate = (timestamp) => {
   return new Date(timestamp).toLocaleDateString();
