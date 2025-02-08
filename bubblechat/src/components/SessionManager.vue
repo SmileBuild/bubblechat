@@ -13,7 +13,11 @@
     <ChatContainer 
       :messages="currentMessages"
       :isLoading="isLoading"
+      :provider="currentAPI.provider"
+      :model="currentAPI.model"
+      :settings="apiSettings"
       @send-message="handleSendMessage"
+      @error="handleError"
     />
   </div>
 </template>
@@ -22,7 +26,6 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import Sidebar from './layout/Sidebar.vue';
 import ChatContainer from './layout/ChatContainer.vue';
-import { ChatService } from '../services/ChatService';
 
 // Settings helper
 const getAPISettings = (providerId) => {
@@ -50,14 +53,9 @@ onMounted(() => {
   }
 });
 
-// Create chat service instance
-const chatService = computed(() => {
-  const settings = getAPISettings(currentAPI.value.provider);
-  return new ChatService(
-    currentAPI.value.provider,
-    currentAPI.value.model,
-    settings
-  );
+// Get API settings for current provider
+const apiSettings = computed(() => {
+  return getAPISettings(currentAPI.value.provider);
 });
 
 // State
@@ -66,7 +64,7 @@ const sessions = ref([]);
 const activeSessionId = ref('1');
 const isLoading = ref(false);
 
-const emit = defineEmits(['show-about']);
+const emit = defineEmits(['show-about', 'error']);
 
 // Storage methods
 const loadSessions = () => {
@@ -203,37 +201,28 @@ const addMessage = (sessionId, message) => {
   }
 };
 
-const handleSendMessage = async (content) => {
+const handleSendMessage = (message, response) => {
   if (!activeSessionId.value) return;
 
-  try {
-    // Add user message
+  if (!response) {
+    // Initial user message
     addMessage(activeSessionId.value, {
-      content,
+      content: message,
       sender: 'user'
     });
-
     isLoading.value = true;
-
-    // Get conversation history for context
-    const session = sessions.value.find(s => s.id === activeSessionId.value);
-    const messageHistory = session?.messages || [];
-
-    // Send to API
-    const response = await chatService.value.sendMessage(content, messageHistory);
-
-    // Add API response
+  } else {
+    // API response
     addMessage(activeSessionId.value, response);
-  } catch (error) {
-    console.error('API Error:', error);
-    
-    // Add error message to chat
-    addMessage(activeSessionId.value, {
-      content: `Error: ${error.message}`,
-      sender: 'error'
-    });
-  } finally {
     isLoading.value = false;
   }
+};
+
+const handleError = (errorMessage) => {
+  isLoading.value = false;
+  addMessage(activeSessionId.value, {
+    content: `Error: ${errorMessage}`,
+    sender: 'error'
+  });
 };
 </script>

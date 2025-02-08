@@ -59,10 +59,94 @@ const props = defineProps({
   isLoading: {
     type: Boolean,
     default: false
+  },
+  provider: {
+    type: String,
+    required: true
+  },
+  model: {
+    type: String,
+    required: true
+  },
+  settings: {
+    type: Object,
+    required: true
   }
 });
 
-const emit = defineEmits(['send-message']);
+const emit = defineEmits(['send-message', 'error']);
+
+// Chat API functionality
+const sendDeepseekMessage = async (content, messageHistory, settings, model) => {
+  const response = await fetch(`${settings.baseUrl}`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${settings.apiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: [
+        ...messageHistory.map(msg => ({
+          role: msg.sender === 'user' ? 'user' : 'assistant',
+          content: msg.content
+        })),
+        { role: 'user', content }
+      ],
+      stream: false
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  if (!data.choices?.[0]?.message?.content) {
+    throw new Error('Invalid response format');
+  }
+
+  return {
+    content: data.choices[0].message.content,
+    sender: 'assistant'
+  };
+};
+
+const sendAnthropicMessage = async (content, messageHistory, settings, model) => {
+  const response = await fetch(`${settings.baseUrl}/v1/messages`, {
+    method: 'POST',
+    headers: {
+      'x-api-key': settings.apiKey,
+      'anthropic-version': '2023-06-01',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: [
+        ...messageHistory.map(msg => ({
+          role: msg.sender === 'user' ? 'user' : 'assistant',
+          content: msg.content
+        })),
+        { role: 'user', content }
+      ],
+      max_tokens: 1024
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  if (!data.content) {
+    throw new Error('Invalid response format');
+  }
+
+  return {
+    content: data.content,
+    sender: 'assistant'
+  };
+};
 
 const newMessage = ref('');
 const messagesContainer = ref(null);
@@ -105,11 +189,29 @@ const renderMarkdown = (content) => {
   }
 };
 
-const sendMessage = () => {
+const sendMessage = async () => {
   const message = newMessage.value.trim();
   if (message && !props.isLoading) {
-    emit('send-message', message);
-    newMessage.value = '';
+    try {
+      newMessage.value = '';
+      emit('send-message', message);
+      
+      // Get API response
+      let response;
+      if (props.provider === 'deepseek') {
+        response = await sendDeepseekMessage(message, props.messages, props.settings, props.model);
+      } else if (props.provider === 'anthropic') {
+        response = await sendAnthropicMessage(message, props.messages, props.settings, props.model);
+      } else {
+        throw new Error('Unknown provider');
+      }
+      
+      // Emit response back
+      emit('send-message', message, response);
+    } catch (error) {
+      console.error('API Error:', error);
+      emit('error', error.message);
+    }
   }
 };
 
