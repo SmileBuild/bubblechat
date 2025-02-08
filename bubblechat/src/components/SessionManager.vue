@@ -21,6 +21,19 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import Sidebar from './layout/Sidebar.vue';
 import ChatContainer from './layout/ChatContainer.vue';
+
+// Settings helper
+const getAPISettings = () => {
+  try {
+    const settings = localStorage.getItem('api-settings');
+    if (!settings) return null;
+    return JSON.parse(settings)?.deepseek;
+  } catch (error) {
+    console.error('Error loading API settings:', error);
+    return null;
+  }
+};
+
 // State
 const STORAGE_KEY = 'bubblechat-sessions';
 const sessions = ref([]);
@@ -137,6 +150,12 @@ const handleSendMessage = async (content) => {
   const sessionIndex = sessions.value.findIndex(s => s.id === activeSessionId.value);
   if (sessionIndex === -1) return;
 
+  const settings = getAPISettings();
+  if (!settings?.apiKey || !settings?.baseUrl) {
+    alert('Please configure your API settings first');
+    return;
+  }
+
   // Add user message
   const userMessage = {
     id: Date.now().toString(),
@@ -146,17 +165,34 @@ const handleSendMessage = async (content) => {
   };
   sessions.value[sessionIndex].messages.push(userMessage);
 
-  // Simulate bot response
+  // Get bot response
   isLoading.value = true;
-  setTimeout(() => {
+  try {
+    const response = await fetch(`${settings.baseUrl}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${settings.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        messages: [{ role: "user", content }],
+        model: settings.model || "deepseek-chat", // Default to deepseek-chat if no model specified
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const completion = await response.json();
+    
     const botMessage = {
       id: Date.now().toString(),
-      content: 'This is a simulated response from the AI bot.',
+      content: completion.choices[0].message.content,
       sender: 'bot',
       timestamp: new Date()
     };
     sessions.value[sessionIndex].messages.push(botMessage);
-    isLoading.value = false;
 
     // Update session title if it's the first message
     if (sessions.value[sessionIndex].messages.length === 2) {
@@ -166,6 +202,11 @@ const handleSendMessage = async (content) => {
         timestamp: new Date()
       });
     }
-  }, 1000);
+  } catch (error) {
+    console.error('API Error:', error);
+    alert(`Error: ${error.message}`);
+  } finally {
+    isLoading.value = false;
+  }
 };
 </script>

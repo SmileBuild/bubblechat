@@ -128,6 +128,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 
+
 const props = defineProps({
   isOpen: {
     type: Boolean,
@@ -140,20 +141,11 @@ const emit = defineEmits(['close', 'save']);
 // Provider Configuration
 const providers = [
   {
-    id: 'openai',
-    name: 'OpenAI',
-    docUrl: 'https://platform.openai.com/docs/api-reference',
-    defaultBaseUrl: 'https://api.openai.com/v1',
-    models: ['gpt-3.5-turbo', 'gpt-4'],
-    testEndpoint: '/models'
-  },
-  {
     id: 'deepseek',
     name: 'DeepSeek',
     docUrl: 'https://platform.deepseek.com/docs',
-    defaultBaseUrl: 'https://api.deepseek.com/v1',
-    models: ['deepseek-chat', 'deepseek-coder'],
-    testEndpoint: '/models'
+    defaultBaseUrl: 'https://api.deepseek.com',
+    models: ['deepseek-chat', 'deepseek-coder']
   },
   {
     id: 'anthropic',
@@ -214,20 +206,51 @@ const handleConnectionTest = async () => {
 
   testingConnection.value = true;
   try {
-    const response = await fetch(
-      `${currentSettings.value.baseUrl}${activeProvider.value.testEndpoint}`,
-      {
+    if (activeProvider.value.id === 'deepseek') {
+      const response = await fetch(`${currentSettings.value.baseUrl}`, {
+        method: 'POST',
         headers: {
-          'Authorization': `Bearer ${currentSettings.value.apiKey}`
-        }
+          'Authorization': `Bearer ${currentSettings.value.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: currentSettings.value.model || "deepseek-chat",
+          messages: [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "Hello!"}
+          ],
+          stream: false
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    );
     
-    if (response.ok) {
-      alert('Connection successful!');
-    } else {
-      alert(`Connection failed: ${response.statusText}`);
+      const data = await response.json();
+      if (!data.choices?.[0]?.message?.content) {
+        throw new Error('Invalid response format');
+      }
+    } else if (activeProvider.value.id === 'anthropic') {
+      const response = await fetch(`${currentSettings.value.baseUrl}${activeProvider.value.testEndpoint}`, {
+        method: 'GET',
+        headers: {
+          'x-api-key': currentSettings.value.apiKey,
+          'anthropic-version': '2023-06-01'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (!Array.isArray(data.models)) {
+        throw new Error('Invalid response format');
+      }
     }
+
+    alert('Connection successful!');
   } catch (error) {
     alert(`Error testing connection: ${error.message}`);
   } finally {
