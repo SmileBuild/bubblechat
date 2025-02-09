@@ -1,6 +1,6 @@
 <template>
   <div v-if="isOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div class="bg-surface rounded-lg p-6 w-[800px] max-w-full max-h-[90vh]">
+    <div class="bg-surface dark:bg-surface-dark rounded-lg p-6 w-[800px] max-w-full max-h-[90vh]">
       <!-- Header -->
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-xl font-semibold">Select API Provider & Model</h2>
@@ -23,14 +23,14 @@
                 'p-4 rounded-lg border text-left transition-colors',
                 selectedProvider?.id === provider.id
                   ? 'bg-primary border-primary'
-                  : 'border-gray-700 hover:border-primary/50'
+                  : 'border-gray-200 dark:border-gray-700 hover:border-primary/50'
               ]"
             >
               <div class="flex items-center gap-3">
                 <span class="material-icons text-2xl">{{ provider.icon }}</span>
                 <div>
                   <div class="font-medium">{{ provider.name }}</div>
-                  <div class="text-sm text-gray-400">{{ provider.description }}</div>
+              <div class="text-sm text-gray-600 dark:text-gray-400">{{ provider.description }}</div>
                 </div>
               </div>
             </button>
@@ -53,17 +53,17 @@
               ]"
             >
               <div class="font-medium">{{ model.name }}</div>
-              <div class="text-sm text-gray-400 mt-1">{{ model.description }}</div>
+              <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ model.description }}</div>
             </button>
           </div>
         </div>
       </div>
 
       <!-- Footer -->
-      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-700">
+      <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
         <button 
           @click="close"
-          class="px-4 py-2 text-sm rounded hover:bg-surface-light"
+          class="px-4 py-2 text-sm rounded text-gray-800 dark:text-gray-200 hover:bg-surface-light dark:hover:bg-surface-light-dark"
         >
           Cancel
         </button>

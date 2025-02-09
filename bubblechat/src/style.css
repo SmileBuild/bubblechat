@@ -3,12 +3,8 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    color-scheme: dark;
-  }
-
   body {
-    @apply bg-background text-gray-100;
+    @apply bg-background text-gray-800 dark:bg-background-dark dark:text-gray-100;
     @apply min-h-screen overflow-hidden;
   }
 

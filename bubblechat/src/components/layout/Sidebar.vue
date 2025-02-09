@@ -1,5 +1,5 @@
 <template>
-  <aside class="h-screen w-64 bg-surface flex flex-col border-r border-gray-700">
+  <aside class="h-screen w-64 flex flex-col border-r bg-surface dark:bg-surface-dark border-gray-200 dark:border-gray-700">
     <SettingsModal 
       :is-open="isSettingsOpen"
       :language="language"
@@ -17,7 +17,7 @@
     
     <!-- New Chat Button -->
     <div class="p-4">
-      <button @click="$emit('new-chat')" class="w-full bg-primary hover:bg-primary/90 text-white rounded-lg py-2 px-4 flex items-center justify-center gap-2">
+      <button @click="$emit('new-chat')" class="w-full bg-primary hover:bg-primary/90 text-white rounded-lg py-2 px-4 flex items-center justify-center gap-2 shadow-sm">
         <span class="material-icons text-xl">add</span>
         {{ t('common.newChat') }}
       </button>
@@ -26,8 +26,8 @@
     <!-- Chat Sessions List -->
     <div class="flex-grow overflow-y-auto">
       <div v-for="session in sessions" :key="session.id" 
-           class="group p-3 hover:bg-surface-light relative"
-           :class="[session.id === activeSessionId ? 'bg-surface-light' : '']">
+           class="group p-3 hover:bg-surface-light dark:hover:bg-surface-light-dark relative"
+           :class="[session.id === activeSessionId ? 'bg-surface-light dark:bg-surface-light-dark' : '']">
         <!-- Session Content -->
         <div class="flex items-center gap-2">
           <div class="flex-grow" @click="$emit('select-session', session.id)">
@@ -38,14 +38,14 @@
                 @blur="saveSessionTitle(session)"
                 @keyup.enter="saveSessionTitle(session)"
                 @keyup.esc="cancelEditing"
-                class="bg-surface-light rounded px-2 py-1 text-sm w-full"
+                class="bg-surface-light dark:bg-surface-light-dark rounded px-2 py-1 text-sm w-full text-gray-800 dark:text-gray-100"
                 :placeholder="t('common.newChat')"
               />
             </div>
-            <div v-else class="text-sm truncate cursor-pointer">
+            <div v-else class="text-sm truncate cursor-pointer text-gray-800 dark:text-gray-100">
               {{ session.title || t('common.newChat') }}
             </div>
-            <div class="text-xs text-gray-400">{{ formatDate(session.timestamp) }}</div>
+            <div class="text-xs text-gray-600 dark:text-gray-400">{{ formatDate(session.timestamp) }}</div>
           </div>
         </div>
         
@@ -53,14 +53,14 @@
         <div class="absolute right-2 top-1/2 -translate-y-1/2 hidden group-hover:flex gap-2" @click.stop>
           <button 
             @click.stop="startEditing(session)"
-            class="text-gray-400 hover:text-white p-1"
+            class="text-secondary hover:text-gray-900 dark:text-secondary-dark dark:hover:text-white p-1"
             :title="t('common.rename')"
           >
             <span class="material-icons text-sm">edit</span>
           </button>
           <button 
             @click.stop="$emit('remove-session', session.id)"
-            class="text-gray-400 hover:text-red-500 p-1"
+            class="text-secondary dark:text-secondary-dark hover:text-red-500 p-1"
             :title="t('common.delete')"
           >
             <span class="material-icons text-sm">delete</span>
@@ -70,19 +70,19 @@
     </div>
 
     <!-- Footer Buttons -->
-    <div class="mt-auto p-4 border-t border-gray-700 flex flex-col gap-2">
+    <div class="mt-auto p-4 border-t border-gray-200 dark:border-gray-700 flex flex-col gap-2">
       <!-- API Selection Button -->
-      <button @click="isAPISelectorOpen = true" class="w-full text-gray-400 hover:text-white py-2 px-4 rounded-lg flex items-center">
+      <button @click="isAPISelectorOpen = true" class="w-full text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white py-2 px-4 rounded-lg flex items-center">
         <span class="material-icons text-xl mr-2">api</span>
         <span>{{ t('common.api') }}</span>
         <span class="ml-auto text-sm opacity-75">{{ currentAPIDisplay }}</span>
       </button>
       
-      <button @click="isSettingsOpen = true" class="w-full text-gray-400 hover:text-white py-2 px-4 rounded-lg flex items-center">
+      <button @click="isSettingsOpen = true" class="w-full text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white py-2 px-4 rounded-lg flex items-center">
         <span class="material-icons text-xl mr-2">settings</span>
         {{ t('common.settings') }}
       </button>
-      <button @click="$emit('show-about')" class="w-full text-gray-400 hover:text-white py-2 px-4 rounded-lg flex items-center">
+      <button @click="$emit('show-about')" class="w-full text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white py-2 px-4 rounded-lg flex items-center">
         <span class="material-icons text-xl mr-2">info</span>
         {{ t('common.about') }}
       </button>

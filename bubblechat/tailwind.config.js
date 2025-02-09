@@ -9,10 +9,22 @@ export default {
     extend: {
       colors: {
         primary: '#2563EB',
-        secondary: '#1E293B',
-        background: '#0F172A',
-        surface: '#1E293B',
-        'surface-light': '#334155',
+        secondary: {
+          DEFAULT: '#64748B',
+          dark: '#334155',
+        },
+        background: {
+          DEFAULT: '#F8FAFC',
+          dark: '#0F172A',
+        },
+        surface: {
+          DEFAULT: '#FFFFFF',
+          dark: '#1E293B',
+        },
+        'surface-light': {
+          DEFAULT: '#F1F5F9',
+          dark: '#475569',
+        }
       },
     },
   },

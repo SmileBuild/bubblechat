@@ -1,8 +1,8 @@
 <template>
   <div v-if="isOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div class="bg-surface rounded-lg p-6 w-[800px] max-w-full max-h-[90vh] flex flex-col">
+    <div class="bg-surface dark:bg-surface-dark rounded-lg p-6 w-[800px] max-w-full max-h-[90vh] flex flex-col">
       <!-- Common Settings -->
-      <div class="border-b border-gray-700 mb-4 pb-4">
+      <div class="border-b border-gray-200 dark:border-gray-700 mb-4 pb-4">
         <h3 class="text-lg font-medium mb-4">{{ t('settings.commonSettings') }}</h3>
         
         <!-- Language Selection -->
@@ -10,7 +10,7 @@
           <label class="block text-sm font-medium">{{ t('settings.language') }}</label>
           <select
             v-model="commonSettings.language"
-            class="w-full bg-surface-light rounded px-3 py-2 text-sm border border-gray-700 focus:border-primary focus:outline-none"
+            class="w-full bg-surface-light dark:bg-surface-light-dark rounded px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:border-primary focus:outline-none"
           >
             <option value="en">English</option>
             <option value="zh">中文</option>
@@ -22,7 +22,7 @@
           <label class="block text-sm font-medium">{{ t('settings.theme') }}</label>
           <select
             v-model="commonSettings.theme"
-            class="w-full bg-surface-light rounded px-3 py-2 text-sm border border-gray-700 focus:border-primary focus:outline-none"
+            class="w-full bg-surface-light dark:bg-surface-light-dark rounded px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:border-primary focus:outline-none"
           >
             <option value="light">{{ t('settings.light') }}</option>
             <option value="dark">{{ t('settings.dark') }}</option>
@@ -33,7 +33,7 @@
       <!-- Provider Settings Container -->
       <div class="flex flex-1 overflow-hidden">
         <!-- Left side - Provider List -->
-        <div class="w-64 border-r border-gray-700 pr-4 overflow-y-auto">
+        <div class="w-64 border-r border-gray-200 dark:border-gray-700 pr-4 overflow-y-auto">
           <h3 class="text-lg font-medium mb-4">{{ t('settings.apiProviders') }}</h3>
           <div class="space-y-2">
             <button
@@ -44,7 +44,7 @@
                 'w-full px-4 py-2 text-left rounded text-sm',
                 activeProvider?.id === provider.id
                   ? 'bg-primary text-white'
-                  : 'hover:bg-surface-light'
+                  : 'hover:bg-surface-light dark:hover:bg-surface-light-dark'
               ]"
             >
               {{ provider.name }}
@@ -58,7 +58,7 @@
             <h2 class="text-xl font-semibold">
               {{ activeProvider ? `${activeProvider.name} Settings` : t('common.settings') }}
             </h2>
-            <button @click="close" class="text-gray-400 hover:text-white">
+            <button @click="close" class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
               <span class="material-icons">close</span>
             </button>
           </div>
@@ -70,7 +70,7 @@
                 :href="activeProvider.docUrl"
                 target="_blank"
                 rel="noopener"
-                class="text-primary hover:text-primary/90 flex items-center gap-2 text-sm"
+                class="text-primary hover:text-primary/90 dark:text-primary/90 dark:hover:text-primary flex items-center gap-2 text-sm"
               >
                 <span class="material-icons text-sm">open_in_new</span>
                 {{ t('settings.viewApiDocs') }}
@@ -86,7 +86,7 @@
                   type="password"
                   v-model="currentSettings.apiKey"
                   :placeholder="t('settings.apiKey')"
-                  class="w-full bg-surface-light rounded px-3 py-2 text-sm border border-gray-700 focus:border-primary focus:outline-none"
+                  class="w-full bg-surface-light dark:bg-surface-light-dark rounded px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:border-primary focus:outline-none"
                 />
               </div>
 
@@ -97,7 +97,7 @@
                   type="text"
                   v-model="currentSettings.baseUrl"
                   :placeholder="activeProvider.defaultBaseUrl"
-                  class="w-full bg-surface-light rounded px-3 py-2 text-sm border border-gray-700 focus:border-primary focus:outline-none"
+                  class="w-full bg-surface-light dark:bg-surface-light-dark rounded px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:border-primary focus:outline-none"
                 />
               </div>
 
@@ -106,7 +106,7 @@
                 <label class="block text-sm font-medium">{{ t('settings.model') }}</label>
                 <select
                   v-model="currentSettings.model"
-                  class="w-full bg-surface-light rounded px-3 py-2 text-sm border border-gray-700 focus:border-primary focus:outline-none"
+                  class="w-full bg-surface-light dark:bg-surface-light-dark rounded px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:border-primary focus:outline-none"
                 >
                   <option value="">{{ t('settings.selectModel') }}</option>
                   <option 
@@ -126,7 +126,7 @@
                 type="button"
                 @click="handleConnectionTest"
                 :disabled="testingConnection || !canTestConnection"
-                class="w-full px-4 py-2 text-sm bg-surface-light hover:bg-surface-light/90 rounded mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                class="w-full px-4 py-2 text-sm bg-surface-light dark:bg-surface-light-dark hover:bg-surface-light/90 dark:hover:bg-surface-light-dark/90 rounded mb-4 disabled:opacity-50 disabled:cursor-not-allowed text-gray-800 dark:text-gray-100"
               >
                 <span v-if="testingConnection">{{ t('settings.testing') }}</span>
                 <span v-else>{{ t('settings.testConnection') }}</span>
@@ -134,11 +134,11 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex justify-end gap-3 pt-4 border-t border-gray-700">
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
               <button 
                 type="button"
                 @click="close"
-                class="px-4 py-2 text-sm rounded hover:bg-surface-light"
+                class="px-4 py-2 text-sm rounded text-gray-800 dark:text-gray-200 hover:bg-surface-light dark:hover:bg-surface-light-dark"
               >
                 {{ t('common.cancel') }}
               </button>

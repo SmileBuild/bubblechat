@@ -1,5 +1,5 @@
 <template>
-  <main class="flex-1 flex flex-col h-screen bg-background overflow-hidden">
+  <main class="flex-1 flex flex-col h-screen overflow-hidden bg-background dark:bg-background-dark">
     <!-- Chat Messages -->
     <div class="flex-1 overflow-y-auto p-4 space-y-4" ref="messagesContainer">
       <div v-for="message in messages" :key="message.id" 
@@ -13,9 +13,9 @@
           <!-- Message Content Column -->
           <div class="flex-1">
             <!-- Name + Metadata Row -->
-            <div class="flex items-center gap-2 mb-1 text-gray-400" 
+            <div class="flex items-center gap-2 mb-1 text-gray-600 dark:text-gray-400" 
                  :class="[message.sender === 'user' ? 'flex-row-reverse' : 'flex-row']">
-              <span class="font-medium text-white">{{ messageTypes[message.sender].name }}</span>
+              <span class="font-medium text-gray-900 dark:text-white">{{ messageTypes[message.sender].name }}</span>
               <span class="text-sm">{{ formatTime(message.timestamp) }}</span>
               <span v-if="message.tokens" class="text-sm">{{ message.tokens }} tokens</span>
             </div>
@@ -32,7 +32,7 @@
         </div>
       </div>
       <div v-if="isLoading" class="flex justify-start">
-        <div class="bg-surface text-gray-100 max-w-3xl p-4 rounded-lg">
+        <div class="max-w-3xl p-4 rounded-lg bg-surface dark:bg-surface-dark text-gray-800 dark:text-gray-100">
           <div class="flex gap-2">
             <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
             <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
@@ -43,13 +43,13 @@
     </div>
 
     <!-- Chat Input -->
-    <div class="border-t border-gray-700 p-4">
+    <div class="border-t p-4 border-gray-200 dark:border-gray-700">
       <form @submit.prevent="sendMessage" class="flex gap-2">
         <input
           v-model="newMessage"
           type="text"
           placeholder="Type your message..."
-          class="flex-1 bg-surface text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+          class="flex-1 rounded-lg px-4 py-2 bg-surface dark:bg-surface-dark text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
         />
         <button
           type="submit"
@@ -185,19 +185,19 @@ const messageTypes = {
   user: {
     name: 'You',
     avatar: '/avatars/user.svg',
-    class: 'bg-primary text-white',
+    class: 'bg-primary text-white shadow-sm',
     align: 'justify-end'
   },
   assistant: {
     name: 'Assistant',
     avatar: '/avatars/assistant.svg',
-    class: 'bg-surface text-gray-100 markdown-body',
+    class: 'markdown-body bg-surface dark:bg-surface-dark text-gray-800 dark:text-gray-100 shadow-sm',
     align: 'justify-start'
   },
   error: {
     name: 'System',
     avatar: '/avatars/assistant.svg',
-    class: 'bg-red-500/20 text-red-300',
+    class: 'bg-red-500/20 text-red-500 dark:text-red-300',
     align: 'justify-center'
   }
 };
@@ -269,22 +269,30 @@ watch(() => props.messages.length, () => {
 <style>
 /* Markdown styling */
 .markdown-body {
-  color: #e5e7eb; /* text-gray-200 */
+  /* Colors handled by Tailwind classes in template */
 }
 
 .markdown-body pre {
-  background-color: #1f2937; /* gray-800 */
+  background-color: #f8f9fa; /* Light mode */
   border-radius: 0.5rem;
   padding: 1rem;
   margin: 1rem 0;
   overflow-x: auto;
 }
 
+.dark .markdown-body pre {
+  background-color: #1f2937; /* Dark mode - gray-800 */
+}
+
 .markdown-body code {
-  background-color: #374151; /* gray-700 */
+  background-color: #f3f4f6; /* Light mode - gray-100 */
   padding: 0.2rem 0.4rem;
   border-radius: 0.25rem;
   font-size: 0.875rem;
+}
+
+.dark .markdown-body code {
+  background-color: #374151; /* Dark mode - gray-700 */
 }
 
 .markdown-body pre code {
@@ -307,10 +315,15 @@ watch(() => props.messages.length, () => {
 }
 
 .markdown-body blockquote {
-  border-left: 4px solid #4b5563; /* gray-600 */
+  border-left: 4px solid #e5e7eb; /* Light mode - gray-200 */
   margin: 1rem 0;
   padding-left: 1rem;
-  color: #9ca3af; /* gray-400 */
+  color: #6b7280; /* Light mode - gray-500 */
+}
+
+.dark .markdown-body blockquote {
+  border-left: 4px solid #4b5563; /* Dark mode - gray-600 */
+  color: #9ca3af; /* Dark mode - gray-400 */
 }
 
 .markdown-body h1, .markdown-body h2, .markdown-body h3, 
