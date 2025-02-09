@@ -71,20 +71,18 @@
     <!-- Footer Buttons -->
     <div class="mt-auto p-4 border-t border-gray-700 flex flex-col gap-2">
       <!-- API Selection Button -->
-      <button @click="isAPISelectorOpen = true" class="w-full text-gray-400 hover:text-white py-2 px-4 rounded-lg flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="material-icons text-xl">api</span>
-          <span class="flex-1 text-left">API</span>
-        </div>
-        <div class="text-sm opacity-75">{{ currentAPIDisplay }}</div>
+      <button @click="isAPISelectorOpen = true" class="w-full text-gray-400 hover:text-white py-2 px-4 rounded-lg flex items-center">
+        <span class="material-icons text-xl mr-2">api</span>
+        <span>API</span>
+        <span class="ml-auto text-sm opacity-75">{{ currentAPIDisplay }}</span>
       </button>
       
-      <button @click="isSettingsOpen = true" class="w-full text-gray-400 hover:text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2">
-        <span class="material-icons text-xl">settings</span>
+      <button @click="isSettingsOpen = true" class="w-full text-gray-400 hover:text-white py-2 px-4 rounded-lg flex items-center">
+        <span class="material-icons text-xl mr-2">settings</span>
         Settings
       </button>
-      <button @click="$emit('show-about')" class="w-full text-gray-400 hover:text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2">
-        <span class="material-icons text-xl">info</span>
+      <button @click="$emit('show-about')" class="w-full text-gray-400 hover:text-white py-2 px-4 rounded-lg flex items-center">
+        <span class="material-icons text-xl mr-2">info</span>
         About
       </button>
     </div>

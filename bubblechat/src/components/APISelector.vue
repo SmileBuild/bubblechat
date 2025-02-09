@@ -119,20 +119,20 @@ const providers = [
     ]
   },
   {
-    id: 'anthropic',
-    name: 'Anthropic',
-    icon: 'psychology',
-    description: 'Claude models for various tasks',
+    id: 'siliconflow',
+    name: 'Siliconflow',
+    icon: 'smart_toy',
+    description: 'Deepseek API services via Siliconflow',
     models: [
       {
-        id: 'claude-2',
-        name: 'Claude 2',
-        description: 'Latest version with enhanced capabilities'
+        id: 'deepseek-chat',
+        name: 'DeepSeek Chat',
+        description: 'General purpose chat model'
       },
       {
-        id: 'claude-instant-1',
-        name: 'Claude Instant',
-        description: 'Faster, more cost-effective option'
+        id: 'deepseek-coder',
+        name: 'DeepSeek Coder',
+        description: 'Specialized for code-related tasks'
       }
     ]
   }
