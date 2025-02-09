@@ -2,6 +2,7 @@
   <aside class="h-screen w-64 bg-surface flex flex-col border-r border-gray-700">
     <SettingsModal 
       :is-open="isSettingsOpen"
+      :language="language"
       @close="isSettingsOpen = false"
       @save="handleSettingsSave"
     />
@@ -18,7 +19,7 @@
     <div class="p-4">
       <button @click="$emit('new-chat')" class="w-full bg-primary hover:bg-primary/90 text-white rounded-lg py-2 px-4 flex items-center justify-center gap-2">
         <span class="material-icons text-xl">add</span>
-        New Chat
+        {{ t('common.newChat') }}
       </button>
     </div>
 
@@ -38,11 +39,11 @@
                 @keyup.enter="saveSessionTitle(session)"
                 @keyup.esc="cancelEditing"
                 class="bg-surface-light rounded px-2 py-1 text-sm w-full"
-                :placeholder="session.title || 'New Chat'"
+                :placeholder="t('common.newChat')"
               />
             </div>
             <div v-else class="text-sm truncate cursor-pointer">
-              {{ session.title || 'New Chat' }}
+              {{ session.title || t('common.newChat') }}
             </div>
             <div class="text-xs text-gray-400">{{ formatDate(session.timestamp) }}</div>
           </div>
@@ -53,14 +54,14 @@
           <button 
             @click.stop="startEditing(session)"
             class="text-gray-400 hover:text-white p-1"
-            title="Rename"
+            :title="t('common.rename')"
           >
             <span class="material-icons text-sm">edit</span>
           </button>
           <button 
             @click.stop="$emit('remove-session', session.id)"
             class="text-gray-400 hover:text-red-500 p-1"
-            title="Delete"
+            :title="t('common.delete')"
           >
             <span class="material-icons text-sm">delete</span>
           </button>
@@ -73,17 +74,17 @@
       <!-- API Selection Button -->
       <button @click="isAPISelectorOpen = true" class="w-full text-gray-400 hover:text-white py-2 px-4 rounded-lg flex items-center">
         <span class="material-icons text-xl mr-2">api</span>
-        <span>API</span>
+        <span>{{ t('common.api') }}</span>
         <span class="ml-auto text-sm opacity-75">{{ currentAPIDisplay }}</span>
       </button>
       
       <button @click="isSettingsOpen = true" class="w-full text-gray-400 hover:text-white py-2 px-4 rounded-lg flex items-center">
         <span class="material-icons text-xl mr-2">settings</span>
-        Settings
+        {{ t('common.settings') }}
       </button>
       <button @click="$emit('show-about')" class="w-full text-gray-400 hover:text-white py-2 px-4 rounded-lg flex items-center">
         <span class="material-icons text-xl mr-2">info</span>
-        About
+        {{ t('common.about') }}
       </button>
     </div>
   </aside>
@@ -91,6 +92,7 @@
 
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue';
+import { useTranslations } from '../../i18n/translations';
 import SettingsModal from '../SettingsModal.vue';
 import APISelector from '../APISelector.vue';
 
@@ -102,8 +104,15 @@ const props = defineProps({
   activeSessionId: {
     type: String,
     default: null
+  },
+  language: {
+    type: String,
+    required: true
   }
 });
+
+// Translation helper
+const t = computed(() => useTranslations(props.language));
 
 const emit = defineEmits(['new-chat', 'select-session', 'show-about', 'remove-session', 'update-session', 'update-settings', 'update-api']);
 

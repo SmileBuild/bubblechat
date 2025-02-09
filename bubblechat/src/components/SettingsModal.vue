@@ -1,140 +1,179 @@
 <template>
   <div v-if="isOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div class="bg-surface rounded-lg p-6 w-[800px] max-w-full max-h-[90vh] flex">
-      <!-- Left side - Provider List -->
-      <div class="w-64 border-r border-gray-700 pr-4 overflow-y-auto">
-        <h3 class="text-lg font-medium mb-4">API Providers</h3>
-        <div class="space-y-2">
-          <button
-            v-for="provider in providers"
-            :key="provider.id"
-            @click="handleProviderSelect(provider)"
-            :class="[
-              'w-full px-4 py-2 text-left rounded text-sm',
-              activeProvider?.id === provider.id
-                ? 'bg-primary text-white'
-                : 'hover:bg-surface-light'
-            ]"
+    <div class="bg-surface rounded-lg p-6 w-[800px] max-w-full max-h-[90vh] flex flex-col">
+      <!-- Common Settings -->
+      <div class="border-b border-gray-700 mb-4 pb-4">
+        <h3 class="text-lg font-medium mb-4">{{ t('settings.commonSettings') }}</h3>
+        
+        <!-- Language Selection -->
+        <div class="space-y-1 mb-4">
+          <label class="block text-sm font-medium">{{ t('settings.language') }}</label>
+          <select
+            v-model="commonSettings.language"
+            class="w-full bg-surface-light rounded px-3 py-2 text-sm border border-gray-700 focus:border-primary focus:outline-none"
           >
-            {{ provider.name }}
-          </button>
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+          </select>
+        </div>
+
+        <!-- Theme Selection -->
+        <div class="space-y-1">
+          <label class="block text-sm font-medium">{{ t('settings.theme') }}</label>
+          <select
+            v-model="commonSettings.theme"
+            class="w-full bg-surface-light rounded px-3 py-2 text-sm border border-gray-700 focus:border-primary focus:outline-none"
+          >
+            <option value="light">{{ t('settings.light') }}</option>
+            <option value="dark">{{ t('settings.dark') }}</option>
+          </select>
         </div>
       </div>
 
-      <!-- Right side - Settings Form -->
-      <div class="flex-1 pl-6 overflow-y-auto">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-semibold">
-            {{ activeProvider ? `${activeProvider.name} Settings` : 'Settings' }}
-          </h2>
-          <button @click="close" class="text-gray-400 hover:text-white">
-            <span class="material-icons">close</span>
-          </button>
+      <!-- Provider Settings Container -->
+      <div class="flex flex-1 overflow-hidden">
+        <!-- Left side - Provider List -->
+        <div class="w-64 border-r border-gray-700 pr-4 overflow-y-auto">
+          <h3 class="text-lg font-medium mb-4">{{ t('settings.apiProviders') }}</h3>
+          <div class="space-y-2">
+            <button
+              v-for="provider in providers"
+              :key="provider.id"
+              @click="handleProviderSelect(provider)"
+              :class="[
+                'w-full px-4 py-2 text-left rounded text-sm',
+                activeProvider?.id === provider.id
+                  ? 'bg-primary text-white'
+                  : 'hover:bg-surface-light'
+              ]"
+            >
+              {{ provider.name }}
+            </button>
+          </div>
         </div>
 
-        <form v-if="activeProvider" @submit.prevent="handleSettingsSave" class="space-y-6">
-          <!-- API Documentation Link -->
-          <div class="mb-6">
-            <a 
-              :href="activeProvider.docUrl"
-              target="_blank"
-              rel="noopener"
-              class="text-primary hover:text-primary/90 flex items-center gap-2 text-sm"
-            >
-              <span class="material-icons text-sm">open_in_new</span>
-              View API Documentation
-            </a>
+        <!-- Right side - Settings Form -->
+        <div class="flex-1 pl-6 overflow-y-auto">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold">
+              {{ activeProvider ? `${activeProvider.name} Settings` : t('common.settings') }}
+            </h2>
+            <button @click="close" class="text-gray-400 hover:text-white">
+              <span class="material-icons">close</span>
+            </button>
           </div>
 
-          <!-- Form Fields -->
-          <div class="space-y-4">
-            <!-- API Key -->
-            <div class="space-y-1">
-              <label class="block text-sm font-medium">API Key</label>
-              <input 
-                type="password"
-                v-model="currentSettings.apiKey"
-                placeholder="Enter API key"
-                class="w-full bg-surface-light rounded px-3 py-2 text-sm border border-gray-700 focus:border-primary focus:outline-none"
-              />
-            </div>
-
-            <!-- Base URL -->
-            <div class="space-y-1">
-              <label class="block text-sm font-medium">API URL</label>
-              <input 
-                type="text"
-                v-model="currentSettings.baseUrl"
-                :placeholder="activeProvider.defaultBaseUrl"
-                class="w-full bg-surface-light rounded px-3 py-2 text-sm border border-gray-700 focus:border-primary focus:outline-none"
-              />
-            </div>
-
-            <!-- Model Selection -->
-            <div class="space-y-1">
-              <label class="block text-sm font-medium">Model</label>
-              <select
-                v-model="currentSettings.model"
-                class="w-full bg-surface-light rounded px-3 py-2 text-sm border border-gray-700 focus:border-primary focus:outline-none"
+          <form v-if="activeProvider" @submit.prevent="handleSettingsSave" class="space-y-6">
+            <!-- API Documentation Link -->
+            <div class="mb-6">
+              <a 
+                :href="activeProvider.docUrl"
+                target="_blank"
+                rel="noopener"
+                class="text-primary hover:text-primary/90 flex items-center gap-2 text-sm"
               >
-                <option value="">Select a model</option>
-                <option 
-                  v-for="model in activeProvider.models" 
-                  :key="model"
-                  :value="model"
-                >
-                  {{ model }}
-                </option>
-              </select>
+                <span class="material-icons text-sm">open_in_new</span>
+                {{ t('settings.viewApiDocs') }}
+              </a>
             </div>
-          </div>
 
-          <!-- Test Connection Button -->
-          <div>
-            <button
-              type="button"
-              @click="handleConnectionTest"
-              :disabled="testingConnection || !canTestConnection"
-              class="w-full px-4 py-2 text-sm bg-surface-light hover:bg-surface-light/90 rounded mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span v-if="testingConnection">Testing...</span>
-              <span v-else>Test Connection</span>
-            </button>
-          </div>
+            <!-- Form Fields -->
+            <div class="space-y-4">
+              <!-- API Key -->
+              <div class="space-y-1">
+                <label class="block text-sm font-medium">{{ t('settings.apiKey') }}</label>
+                <input 
+                  type="password"
+                  v-model="currentSettings.apiKey"
+                  :placeholder="t('settings.apiKey')"
+                  class="w-full bg-surface-light rounded px-3 py-2 text-sm border border-gray-700 focus:border-primary focus:outline-none"
+                />
+              </div>
 
-          <!-- Action Buttons -->
-          <div class="flex justify-end gap-3 pt-4 border-t border-gray-700">
-            <button 
-              type="button"
-              @click="close"
-              class="px-4 py-2 text-sm rounded hover:bg-surface-light"
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit"
-              :disabled="!isFormValid"
-              class="px-4 py-2 text-sm bg-primary hover:bg-primary/90 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Save
-            </button>
-          </div>
-        </form>
+              <!-- Base URL -->
+              <div class="space-y-1">
+                <label class="block text-sm font-medium">{{ t('settings.apiUrl') }}</label>
+                <input 
+                  type="text"
+                  v-model="currentSettings.baseUrl"
+                  :placeholder="activeProvider.defaultBaseUrl"
+                  class="w-full bg-surface-light rounded px-3 py-2 text-sm border border-gray-700 focus:border-primary focus:outline-none"
+                />
+              </div>
+
+              <!-- Model Selection -->
+              <div class="space-y-1">
+                <label class="block text-sm font-medium">{{ t('settings.model') }}</label>
+                <select
+                  v-model="currentSettings.model"
+                  class="w-full bg-surface-light rounded px-3 py-2 text-sm border border-gray-700 focus:border-primary focus:outline-none"
+                >
+                  <option value="">{{ t('settings.selectModel') }}</option>
+                  <option 
+                    v-for="model in activeProvider.models" 
+                    :key="model"
+                    :value="model"
+                  >
+                    {{ model }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Test Connection Button -->
+            <div>
+              <button
+                type="button"
+                @click="handleConnectionTest"
+                :disabled="testingConnection || !canTestConnection"
+                class="w-full px-4 py-2 text-sm bg-surface-light hover:bg-surface-light/90 rounded mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span v-if="testingConnection">{{ t('settings.testing') }}</span>
+                <span v-else>{{ t('settings.testConnection') }}</span>
+              </button>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end gap-3 pt-4 border-t border-gray-700">
+              <button 
+                type="button"
+                @click="close"
+                class="px-4 py-2 text-sm rounded hover:bg-surface-light"
+              >
+                {{ t('common.cancel') }}
+              </button>
+              <button 
+                type="submit"
+                :disabled="!isFormValid"
+                class="px-4 py-2 text-sm bg-primary hover:bg-primary/90 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {{ t('common.save') }}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-
+import { ref, computed, onMounted, watch } from 'vue';
+import { useTranslations } from '../i18n/translations';
 
 const props = defineProps({
   isOpen: {
     type: Boolean,
     default: false
+  },
+  language: {
+    type: String,
+    required: true
   }
 });
+
+// Translation helper
+const t = computed(() => useTranslations(props.language));
 
 const emit = defineEmits(['close', 'save']);
 
@@ -157,9 +196,19 @@ const providers = [
 ];
 
 // State
+const commonSettings = ref({
+  language: localStorage.getItem('app-language') || 'en',
+  theme: localStorage.getItem('app-theme') || 'dark'
+});
 const settings = ref({});
 const activeProvider = ref(providers[0]);
 const testingConnection = ref(false);
+
+// Watch for common settings changes
+watch(commonSettings, (newSettings) => {
+  localStorage.setItem('app-language', newSettings.language);
+  localStorage.setItem('app-theme', newSettings.theme);
+}, { deep: true });
 
 // Initialize settings structure for a provider
 const initializeProviderSettings = (provider) => {
@@ -242,7 +291,10 @@ const handleSettingsSave = () => {
   if (!isFormValid.value) return;
   
   localStorage.setItem('api-settings', JSON.stringify(settings.value));
-  emit('save', settings.value);
+  emit('save', {
+    apiSettings: settings.value,
+    commonSettings: commonSettings.value
+  });
   close();
 };
 

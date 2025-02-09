@@ -3,6 +3,7 @@
     <Sidebar 
       :sessions="sessions"
       :activeSessionId="activeSessionId"
+      :language="language"
       @new-chat="createNewChat"
       @select-session="selectSession"
       @show-about="$emit('show-about')"
@@ -24,7 +25,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, inject } from 'vue';
 import Sidebar from './layout/Sidebar.vue';
 import ChatContainer from './layout/ChatContainer.vue';
 
@@ -65,7 +66,17 @@ const sessions = ref([]);
 const activeSessionId = ref('1');
 const isLoading = ref(false);
 
+const props = defineProps({
+  language: {
+    type: String,
+    required: true
+  }
+});
+
 const emit = defineEmits(['show-about', 'error']);
+
+// Get settings update handler from parent
+const onSettingsUpdate = inject('onSettingsUpdate');
 
 // Storage methods
 const loadSessions = () => {
@@ -177,7 +188,10 @@ const handleAPIChange = (selection) => {
 };
 
 const handleSettingsSave = (settings) => {
-  // Settings are already saved to localStorage by SettingsModal
+  // Call the injected handler to update app-level settings
+  if (onSettingsUpdate) {
+    onSettingsUpdate(settings);
+  }
 };
 
 const addMessage = (sessionId, message) => {
