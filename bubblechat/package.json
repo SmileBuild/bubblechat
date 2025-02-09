@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "dayjs": "^1.11.13",
     "dompurify": "^3.0.8",
     "highlight.js": "^11.9.0",
     "marked": "^11.2.0",

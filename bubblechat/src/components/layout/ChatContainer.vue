@@ -4,12 +4,30 @@
     <div class="flex-1 overflow-y-auto p-4 space-y-4" ref="messagesContainer">
       <div v-for="message in messages" :key="message.id" 
            :class="['flex', messageTypes[message.sender].align]">
-        <div :class="[
-          'max-w-3xl p-4 rounded-lg',
-          messageTypes[message.sender].class
-        ]">
-          <div v-if="message.sender === 'assistant'" v-html="renderMarkdown(message.content)" />
-          <div v-else>{{ message.content }}</div>
+        <div class="flex gap-3 max-w-3xl w-full">
+          <!-- Avatar -->
+          <div class="w-8 h-8 shrink-0">
+            <img :src="messageTypes[message.sender].avatar" :alt="message.sender" class="w-full h-full">
+          </div>
+          
+          <!-- Message Content Column -->
+          <div class="flex-1">
+            <!-- Name + Metadata Row -->
+            <div class="flex items-center gap-2 mb-1 text-gray-400">
+              <span class="font-medium text-white">{{ messageTypes[message.sender].name }}</span>
+              <span class="text-sm">{{ formatTime(message.timestamp) }}</span>
+              <span v-if="message.tokens" class="text-sm">{{ message.tokens }} tokens</span>
+            </div>
+            
+            <!-- Message Content -->
+            <div :class="[
+              'p-4 rounded-lg',
+              messageTypes[message.sender].class
+            ]">
+              <div v-if="message.sender === 'assistant'" v-html="renderMarkdown(message.content)" />
+              <div v-else>{{ message.content }}</div>
+            </div>
+          </div>
         </div>
       </div>
       <div v-if="isLoading" class="flex justify-start">
@@ -45,11 +63,15 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { marked } from 'marked';
 import hljs from 'highlight.js';
 import DOMPurify from 'dompurify';
 import 'highlight.js/styles/github-dark.css';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
+dayjs.extend(relativeTime);
 
 const props = defineProps({
   messages: {
@@ -75,6 +97,12 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['send-message', 'error']);
+
+// Format relative time
+const formatTime = (timestamp) => {
+  if (!timestamp) return '';
+  return dayjs(timestamp).fromNow();
+};
 
 // Chat API functionality
 const sendDeepseekMessage = async (content, messageHistory, settings, model) => {
@@ -108,7 +136,9 @@ const sendDeepseekMessage = async (content, messageHistory, settings, model) => 
 
   return {
     content: data.choices[0].message.content,
-    sender: 'assistant'
+    sender: 'assistant',
+    timestamp: new Date().toISOString(),
+    tokens: data.usage?.total_tokens
   };
 };
 
@@ -143,7 +173,9 @@ const sendSiliconflowMessage = async (content, messageHistory, settings, model) 
 
   return {
     content: data.choices[0].message.content,
-    sender: 'assistant'
+    sender: 'assistant',
+    timestamp: new Date().toISOString(),
+    tokens: data.usage?.total_tokens
   };
 };
 
@@ -153,14 +185,20 @@ const messagesContainer = ref(null);
 // Message type styling configuration
 const messageTypes = {
   user: {
+    name: 'You',
+    avatar: '/avatars/user.svg',
     class: 'bg-primary text-white',
     align: 'justify-end'
   },
   assistant: {
+    name: 'Assistant',
+    avatar: '/avatars/assistant.svg',
     class: 'bg-surface text-gray-100 markdown-body',
     align: 'justify-start'
   },
   error: {
+    name: 'System',
+    avatar: '/avatars/assistant.svg',
     class: 'bg-red-500/20 text-red-300',
     align: 'justify-center'
   }
@@ -193,7 +231,11 @@ const sendMessage = async () => {
   if (message && !props.isLoading) {
     try {
       newMessage.value = '';
-      emit('send-message', message);
+      emit('send-message', {
+        content: message,
+        sender: 'user',
+        timestamp: new Date().toISOString()
+      });
       
       // Get API response
       let response;
@@ -205,11 +247,15 @@ const sendMessage = async () => {
         throw new Error('Unknown provider');
       }
       
-      // Emit response back
-      emit('send-message', message, response);
+      // Emit response back with timestamp
+      emit('send-message', response);
     } catch (error) {
       console.error('API Error:', error);
-      emit('error', error.message);
+      emit('error', {
+        content: error.message,
+        sender: 'error',
+        timestamp: new Date().toISOString()
+      });
     }
   }
 };
