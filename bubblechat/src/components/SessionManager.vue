@@ -9,6 +9,7 @@
       @update-session="updateSession"
       @update-settings="handleSettingsSave"
       @update-api="handleAPIChange"
+      @remove-session="removeSession"
     />
     <ChatContainer 
       :messages="currentMessages"
