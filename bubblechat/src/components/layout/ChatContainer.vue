@@ -4,7 +4,7 @@
     <div class="flex-1 overflow-y-auto p-4 space-y-4" ref="messagesContainer">
       <div v-for="message in messages" :key="message.id" 
            :class="['flex', messageTypes[message.sender].align]">
-        <div class="flex gap-3 max-w-3xl w-full">
+        <div class="flex gap-3 max-w-3xl w-full" :class="[message.sender === 'user' ? 'flex-row-reverse' : 'flex-row']">
           <!-- Avatar -->
           <div class="w-8 h-8 shrink-0">
             <img :src="messageTypes[message.sender].avatar" :alt="message.sender" class="w-full h-full">
@@ -13,7 +13,8 @@
           <!-- Message Content Column -->
           <div class="flex-1">
             <!-- Name + Metadata Row -->
-            <div class="flex items-center gap-2 mb-1 text-gray-400">
+            <div class="flex items-center gap-2 mb-1 text-gray-400" 
+                 :class="[message.sender === 'user' ? 'flex-row-reverse' : 'flex-row']">
               <span class="font-medium text-white">{{ messageTypes[message.sender].name }}</span>
               <span class="text-sm">{{ formatTime(message.timestamp) }}</span>
               <span v-if="message.tokens" class="text-sm">{{ message.tokens }} tokens</span>
