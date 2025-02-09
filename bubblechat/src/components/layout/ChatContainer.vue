@@ -130,15 +130,14 @@ const sendDeepseekMessage = async (content, messageHistory, settings, model) => 
   }
 
   const data = await response.json();
+  console.log('response data: ',data)
   if (!data.choices?.[0]?.message?.content) {
     throw new Error('Invalid response format');
   }
-
+  console.log('return: ', data)
   return {
-    content: data.choices[0].message.content,
+    content: data.choices?.[0]?.message?.content,
     sender: 'assistant',
-    timestamp: new Date().toISOString(),
-    tokens: data.usage?.total_tokens
   };
 };
 
@@ -172,10 +171,8 @@ const sendSiliconflowMessage = async (content, messageHistory, settings, model) 
   }
 
   return {
-    content: data.choices[0].message.content,
+    content: data.choices?.[0]?.message?.content,
     sender: 'assistant',
-    timestamp: new Date().toISOString(),
-    tokens: data.usage?.total_tokens
   };
 };
 
@@ -231,11 +228,7 @@ const sendMessage = async () => {
   if (message && !props.isLoading) {
     try {
       newMessage.value = '';
-      emit('send-message', {
-        content: message,
-        sender: 'user',
-        timestamp: new Date().toISOString()
-      });
+      emit('send-message',message);
       
       // Get API response
       let response;
@@ -247,14 +240,16 @@ const sendMessage = async () => {
         throw new Error('Unknown provider');
       }
       
+      console.error('Message Error:', message);
+      
+      console.error('response Error:', response);
       // Emit response back with timestamp
-      emit('send-message', response);
+      emit('send-message', message, response);
     } catch (error) {
       console.error('API Error:', error);
       emit('error', {
         content: error.message,
-        sender: 'error',
-        timestamp: new Date().toISOString()
+        sender: 'error'
       });
     }
   }

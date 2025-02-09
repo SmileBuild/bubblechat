@@ -202,6 +202,8 @@ const addMessage = (sessionId, message) => {
 };
 
 const handleSendMessage = (message, response) => {
+  console.log('handlesendmsg:',message);
+  console.log('handlesendmsg:',response);
   if (!activeSessionId.value) return;
 
   if (!response) {
@@ -220,6 +222,7 @@ const handleSendMessage = (message, response) => {
 
 const handleError = (errorMessage) => {
   isLoading.value = false;
+  console.log('errormsg',errorMessage)
   addMessage(activeSessionId.value, {
     content: `Error: ${errorMessage}`,
     sender: 'error'
