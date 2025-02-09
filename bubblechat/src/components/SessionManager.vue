@@ -14,6 +14,7 @@
     />
     <ChatContainer 
       :messages="currentMessages"
+      :language="language"
       :isLoading="isLoading"
       :provider="currentAPI.provider"
       :model="currentAPI.model"

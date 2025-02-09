@@ -1,5 +1,12 @@
 export const translations = {
   en: {
+    chat: {
+      inputPlaceholder: 'Type your message...',
+      sendButton: 'Send',
+      you: 'You',
+      assistant: 'Assistant',
+      system: 'System'
+    },
     common: {
       settings: 'Settings',
       api: 'API',
@@ -28,6 +35,13 @@ export const translations = {
     }
   },
   zh: {
+    chat: {
+      inputPlaceholder: '输入消息...',
+      sendButton: '发送',
+      you: '你',
+      assistant: '助手',
+      system: '系统'
+    },
     common: {
       settings: '设置',
       api: 'API',

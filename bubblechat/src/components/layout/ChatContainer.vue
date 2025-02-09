@@ -48,7 +48,7 @@
         <input
           v-model="newMessage"
           type="text"
-          placeholder="Type your message..."
+          :placeholder="t('chat.inputPlaceholder')"
           class="flex-1 rounded-lg px-4 py-2 bg-surface dark:bg-surface-dark text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
         />
         <button
@@ -56,7 +56,7 @@
           :disabled="!newMessage.trim() || isLoading"
           class="bg-primary hover:bg-primary/90 disabled:bg-gray-600 text-white rounded-lg px-6 py-2"
         >
-          Send
+          {{ t('chat.sendButton') }}
         </button>
       </form>
     </div>
@@ -64,9 +64,10 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, watch, onMounted, computed, inject } from 'vue';
 import { marked } from 'marked';
 import hljs from 'highlight.js';
+import { useTranslations } from '../../i18n/translations';
 import DOMPurify from 'dompurify';
 import 'highlight.js/styles/github-dark.css';
 import dayjs from 'dayjs';
@@ -78,6 +79,10 @@ const props = defineProps({
   messages: {
     type: Array,
     default: () => []
+  },
+  language: {
+    type: String,
+    required: true
   },
   isLoading: {
     type: Boolean,
@@ -95,6 +100,10 @@ const props = defineProps({
     type: Object,
     required: true
   }
+});
+
+const t = computed(() => {
+  return useTranslations(props.language);
 });
 
 const emit = defineEmits(['send-message', 'error']);
@@ -183,19 +192,19 @@ const messagesContainer = ref(null);
 // Message type styling configuration
 const messageTypes = {
   user: {
-    name: 'You',
+    name: 'you',
     avatar: '/avatars/user.svg',
     class: 'bg-primary text-white shadow-sm',
     align: 'justify-end'
   },
   assistant: {
-    name: 'Assistant',
+    name: 'assistant',
     avatar: '/avatars/assistant.svg',
     class: 'markdown-body bg-surface dark:bg-surface-dark text-gray-800 dark:text-gray-100 shadow-sm',
     align: 'justify-start'
   },
   error: {
-    name: 'System',
+    name: 'system',
     avatar: '/avatars/assistant.svg',
     class: 'bg-red-500/20 text-red-500 dark:text-red-300',
     align: 'justify-center'
