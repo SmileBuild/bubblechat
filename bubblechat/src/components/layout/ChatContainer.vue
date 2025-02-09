@@ -112,12 +112,11 @@ const sendDeepseekMessage = async (content, messageHistory, settings, model) => 
   };
 };
 
-const sendAnthropicMessage = async (content, messageHistory, settings, model) => {
-  const response = await fetch(`${settings.baseUrl}/v1/messages`, {
+const sendSiliconflowMessage = async (content, messageHistory, settings, model) => {
+  const response = await fetch(settings.baseUrl, {
     method: 'POST',
     headers: {
-      'x-api-key': settings.apiKey,
-      'anthropic-version': '2023-06-01',
+      'Authorization': `Bearer ${settings.apiKey}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
@@ -129,7 +128,7 @@ const sendAnthropicMessage = async (content, messageHistory, settings, model) =>
         })),
         { role: 'user', content }
       ],
-      max_tokens: 1024
+      stream: false
     })
   });
 
@@ -138,12 +137,12 @@ const sendAnthropicMessage = async (content, messageHistory, settings, model) =>
   }
 
   const data = await response.json();
-  if (!data.content) {
+  if (!data.choices?.[0]?.message?.content) {
     throw new Error('Invalid response format');
   }
 
   return {
-    content: data.content,
+    content: data.choices[0].message.content,
     sender: 'assistant'
   };
 };
@@ -200,8 +199,8 @@ const sendMessage = async () => {
       let response;
       if (props.provider === 'deepseek') {
         response = await sendDeepseekMessage(message, props.messages, props.settings, props.model);
-      } else if (props.provider === 'anthropic') {
-        response = await sendAnthropicMessage(message, props.messages, props.settings, props.model);
+      } else if (props.provider === 'siliconflow') {
+        response = await sendSiliconflowMessage(message, props.messages, props.settings, props.model);
       } else {
         throw new Error('Unknown provider');
       }

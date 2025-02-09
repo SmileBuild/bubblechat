@@ -120,10 +120,11 @@ const currentAPI = ref({
 });
 
 const currentAPIDisplay = computed(() => {
-  const provider = currentAPI.value.provider === 'deepseek' ? 'DeepSeek' : 'Anthropic';
-  const model = currentAPI.value.model.split('-').map(word => 
-    word.charAt(0).toUpperCase() + word.slice(1)
-  ).join(' ');
+  const provider = currentAPI.value.provider === 'deepseek' ? 'DeepSeek' : 'Siliconflow';
+  let model = currentAPI.value.model;
+  if (model.includes('/')) {
+    model = model.split('/')[1]; // For Siliconflow models
+  }
   return `${provider} - ${model}`;
 });
 

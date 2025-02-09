@@ -104,7 +104,7 @@ const providers = [
     id: 'deepseek',
     name: 'DeepSeek',
     icon: 'smart_toy',
-    description: 'Advanced AI model for chat and coding',
+    description: 'Advanced AI model for chat and reasoning',
     models: [
       {
         id: 'deepseek-chat',
@@ -112,9 +112,9 @@ const providers = [
         description: 'General purpose chat model'
       },
       {
-        id: 'deepseek-coder',
-        name: 'DeepSeek Coder',
-        description: 'Specialized for code-related tasks'
+        id: 'deepseek-reasoner',
+        name: 'DeepSeek Reasoner',
+        description: 'Advanced reasoning capabilities'
       }
     ]
   },
@@ -125,14 +125,14 @@ const providers = [
     description: 'Deepseek API services via Siliconflow',
     models: [
       {
-        id: 'deepseek-chat',
-        name: 'DeepSeek Chat',
-        description: 'General purpose chat model'
+        id: 'deepseek-ai/DeepSeek-V3',
+        name: 'DeepSeek V3',
+        description: 'Latest version of DeepSeek model'
       },
       {
-        id: 'deepseek-coder',
-        name: 'DeepSeek Coder',
-        description: 'Specialized for code-related tasks'
+        id: 'deepseek-ai/DeepSeek-R1',
+        name: 'DeepSeek R1',
+        description: 'Advanced reasoning model'
       }
     ]
   }
