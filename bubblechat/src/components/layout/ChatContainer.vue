@@ -21,10 +21,20 @@
             </div>
             
             <!-- Message Content -->
-            <div :class="[
+            <div class="relative group" :class="[
               'p-4 rounded-lg',
               messageTypes[message.sender].class
             ]">
+              <button 
+                class="absolute top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-white/20 rounded p-1"
+                :class="[message.sender === 'user' ? 'left-2' : 'right-2']"
+                @click="copyMessageContent(message)"
+                :title="t('chat.copy')"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                </svg>
+              </button>
               <div v-if="message.sender === 'assistant'" v-html="renderMarkdown(message.content)" />
               <div v-else>{{ message.content }}</div>
             </div>
@@ -220,6 +230,23 @@ onMounted(() => {
     langPrefix: 'hljs language-'
   });
 });
+
+// Copy message content
+const copyMessageContent = async (message) => {
+  try {
+    let textToCopy = message.content;
+    if (message.sender === 'assistant') {
+      // For assistant messages, we need to strip HTML tags since the content is markdown
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = renderMarkdown(message.content);
+      textToCopy = tempDiv.textContent || tempDiv.innerText;
+    }
+    await navigator.clipboard.writeText(textToCopy);
+    // You could add a toast notification here if desired
+  } catch (error) {
+    console.error('Failed to copy message:', error);
+  }
+};
 
 // Render markdown with syntax highlighting and sanitization
 const renderMarkdown = (content) => {

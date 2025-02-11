@@ -5,7 +5,8 @@ export const translations = {
       sendButton: 'Send',
       you: 'You',
       assistant: 'Assistant',
-      system: 'System'
+      system: 'System',
+      copy: 'Copy message'
     },
     common: {
       settings: 'Settings',
@@ -40,7 +41,8 @@ export const translations = {
       sendButton: '发送',
       you: '你',
       assistant: '助手',
-      system: '系统'
+      system: '系统',
+      copy: '复制消息'
     },
     common: {
       settings: '设置',
