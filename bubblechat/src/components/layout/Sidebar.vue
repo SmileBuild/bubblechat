@@ -12,7 +12,7 @@
       :current-provider="currentAPI.provider"
       :current-model="currentAPI.model"
       @close="isAPISelectorOpen = false"
-      @save="handleAPISelect"
+      @save="handleAPIUpdate"
     />
     
     <!-- New Chat Button -->
@@ -114,6 +114,18 @@ const props = defineProps({
 // Translation helper
 const t = computed(() => useTranslations(props.language));
 
+// Format date helper
+const formatDate = (timestamp) => {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  return new Intl.DateTimeFormat(props.language, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric'
+  }).format(date);
+};
+
 const emit = defineEmits(['new-chat', 'select-session', 'show-about', 'remove-session', 'update-session', 'update-settings', 'update-api']);
 
 const isSettingsOpen = ref(false);
@@ -122,10 +134,14 @@ const editingSessionId = ref(null);
 const editTitles = ref({});
 const inputRefs = ref({});
 
-// API Selection state
+// API state management
 const currentAPI = ref({
-  provider: 'deepseek',
-  model: 'deepseek-chat'
+  provider: localStorage.getItem('current-api') 
+    ? JSON.parse(localStorage.getItem('current-api')).provider
+    : 'deepseek',
+  model: localStorage.getItem('current-api')
+    ? JSON.parse(localStorage.getItem('current-api')).model
+    : 'deepseek-chat'
 });
 
 const currentAPIDisplay = computed(() => {
@@ -137,26 +153,15 @@ const currentAPIDisplay = computed(() => {
   return `${provider} - ${model}`;
 });
 
-// Load current API settings on mount
-onMounted(() => {
-  const savedAPI = localStorage.getItem('current-api');
-  if (savedAPI) {
-    currentAPI.value = JSON.parse(savedAPI);
-  }
-});
-
-const handleAPISelect = (selection) => {
+const handleAPIUpdate = ({ selection, settings }) => {
   currentAPI.value = selection;
   localStorage.setItem('current-api', JSON.stringify(selection));
   emit('update-api', selection);
+  emit('update-settings', { apiSettings: settings });
 };
 
-const formatDate = (timestamp) => {
-  return new Date(timestamp).toLocaleDateString();
-};
-
-const handleSettingsSave = (settings) => {
-  emit('update-settings', settings);
+const handleSettingsSave = ({ commonSettings }) => {
+  emit('update-settings', { commonSettings });
 };
 
 const startEditing = (session) => {

@@ -30,35 +30,12 @@ import { ref, computed, onMounted, watch, inject } from 'vue';
 import Sidebar from './layout/Sidebar.vue';
 import ChatContainer from './layout/ChatContainer.vue';
 
-// Settings helper
-const getAPISettings = (providerId) => {
-  try {
-    const settings = localStorage.getItem('api-settings');
-    if (!settings) return null;
-    return JSON.parse(settings)?.[providerId];
-  } catch (error) {
-    console.error('Error loading API settings:', error);
-    return null;
-  }
-};
 
 // API State
+const apiSettings = ref({});
 const currentAPI = ref({
   provider: 'deepseek',
   model: 'deepseek-chat'
-});
-
-// Load saved API selection
-onMounted(() => {
-  const savedAPI = localStorage.getItem('current-api');
-  if (savedAPI) {
-    currentAPI.value = JSON.parse(savedAPI);
-  }
-});
-
-// Get API settings for current provider
-const apiSettings = computed(() => {
-  return getAPISettings(currentAPI.value.provider);
 });
 
 // State
@@ -183,16 +160,24 @@ const selectSession = (id) => {
   activeSessionId.value = id;
 };
 
-const handleAPIChange = (selection) => {
-  currentAPI.value = selection;
-  localStorage.setItem('current-api', JSON.stringify(selection));
-};
-
 const handleSettingsSave = (settings) => {
-  // Call the injected handler to update app-level settings
-  if (onSettingsUpdate) {
+  // Handle common settings update
+  if (settings.commonSettings && onSettingsUpdate) {
     onSettingsUpdate(settings);
   }
+  
+  // Handle API settings update
+  if (settings.apiSettings) {
+    apiSettings.value = settings.apiSettings[currentAPI.value.provider] || {};
+  }
+};
+
+const handleAPIChange = (selection) => {
+  currentAPI.value = selection;
+  // Update the active API settings based on the new provider
+  apiSettings.value = localStorage.getItem('api-settings') ? 
+    JSON.parse(localStorage.getItem('api-settings'))[selection.provider] || {} :
+    {};
 };
 
 const addMessage = (sessionId, message) => {
