@@ -128,8 +128,8 @@ const sendDeepseekMessage = async (content, messageHistory, settings, model) => 
         ...messageHistory.map(msg => ({
           role: msg.sender === 'user' ? 'user' : 'assistant',
           content: msg.content
-        })),
-        { role: 'user', content }
+        }))
+        
       ],
       stream: false
     })
@@ -164,8 +164,7 @@ const sendSiliconflowMessage = async (content, messageHistory, settings, model) 
         ...messageHistory.map(msg => ({
           role: msg.sender === 'user' ? 'user' : 'assistant',
           content: msg.content
-        })),
-        { role: 'user', content }
+        }))
       ],
       stream: false
     })
