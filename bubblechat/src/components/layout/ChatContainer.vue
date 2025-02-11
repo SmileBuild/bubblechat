@@ -25,7 +25,16 @@
               'p-4 rounded-lg',
               messageTypes[message.sender].class
             ]">
-              <div v-if="message.sender === 'assistant'" v-html="renderMarkdown(message.content)" />
+              <div v-if="message.sender === 'assistant'">
+                <div v-html="renderMarkdown(message.content)" />
+                <div v-if="message.reasoning_content" 
+                     class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Reasoning</div>
+                  <div class="text-sm bg-gray-50 dark:bg-gray-800 p-3 rounded">
+                    {{ message.reasoning_content }}
+                  </div>
+                </div>
+              </div>
               <div v-else>{{ message.content }}</div>
             </div>
           </div>
@@ -129,7 +138,6 @@ const sendDeepseekMessage = async (content, messageHistory, settings, model) => 
           role: msg.sender === 'user' ? 'user' : 'assistant',
           content: msg.content
         }))
-        
       ],
       stream: false
     })
@@ -140,15 +148,33 @@ const sendDeepseekMessage = async (content, messageHistory, settings, model) => 
   }
 
   const data = await response.json();
-  console.log('response data: ',data)
+  console.log('response data: ',data);
   if (!data.choices?.[0]?.message?.content) {
     throw new Error('Invalid response format');
   }
-  console.log('return: ', data)
-  return {
-    content: data.choices?.[0]?.message?.content,
+
+  // Get reasoning_content if available
+
+  if (!data.choices[0]?.message?.reasoning_content) {
+    return {
+    content: data.choices[0].message.content,
     sender: 'assistant',
   };
+  }
+
+  const reasoningContent = data.choices[0]?.message?.reasoning_content;
+  
+  const responseObj = {
+    content: data.choices[0].message.content,
+    sender: 'assistant',
+  };
+
+  // Add reasoning_content if present
+  if (reasoningContent) {
+    responseObj.reasoning_content = reasoningContent;
+  }
+
+  return responseObj;
 };
 
 const sendSiliconflowMessage = async (content, messageHistory, settings, model) => {
@@ -178,11 +204,26 @@ const sendSiliconflowMessage = async (content, messageHistory, settings, model) 
   if (!data.choices?.[0]?.message?.content) {
     throw new Error('Invalid response format');
   }
-
-  return {
-    content: data.choices?.[0]?.message?.content,
+  if (!data.choices[0]?.message?.reasoning_content) {
+    return {
+    content: data.choices[0].message.content,
     sender: 'assistant',
   };
+  }
+  // Get reasoning_content if available (for Deepseek-R1 model)
+  const reasoningContent = data.choices[0]?.message?.reasoning_content;
+  
+  const responseObj = {
+    content: data.choices[0].message.content,
+    sender: 'assistant',
+  };
+
+  // Add reasoning_content if present
+  if (reasoningContent) {
+    responseObj.reasoning_content = reasoningContent;
+  }
+
+  return responseObj;
 };
 
 const newMessage = ref('');
@@ -250,7 +291,6 @@ const sendMessage = async () => {
       }
       
       console.error('Message Error:', message);
-      
       console.error('response Error:', response);
       // Emit response back with timestamp
       emit('send-message', message, response);
