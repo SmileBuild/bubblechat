@@ -4,14 +4,14 @@
     <div class="flex-1 overflow-y-auto p-4 space-y-4" ref="messagesContainer">
       <div v-for="message in messages" :key="message.id" 
            :class="['flex', messageTypes[message.sender].align]">
-        <div class="flex gap-3 max-w-3xl w-full" :class="[message.sender === 'user' ? 'flex-row-reverse' : 'flex-row']">
+        <div class="flex gap-3 items-start max-w-3xl w-full" :class="[message.sender === 'user' ? 'flex-row-reverse' : 'flex-row']">
           <!-- Avatar -->
           <div class="w-8 h-8 shrink-0">
             <img :src="messageTypes[message.sender].avatar" :alt="message.sender" class="w-full h-full">
           </div>
           
           <!-- Message Content Column -->
-          <div class="flex-1">
+          <div class="flex-1 group relative">
             <!-- Name + Metadata Row -->
             <div class="flex items-center gap-2 mb-1 text-gray-600 dark:text-gray-400" 
                  :class="[message.sender === 'user' ? 'flex-row-reverse' : 'flex-row']">
@@ -21,23 +21,25 @@
             </div>
             
             <!-- Message Content -->
-            <div class="relative group" :class="[
-              'p-4 rounded-lg',
+            <div :class="[
+              'p-4 rounded-lg relative',
               messageTypes[message.sender].class
             ]">
-              <button 
-                class="absolute top-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/10 hover:bg-white/20 rounded p-1"
-                :class="[message.sender === 'user' ? 'left-2' : 'right-2']"
-                @click="copyMessageContent(message)"
-                :title="t('chat.copy')"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                </svg>
-              </button>
               <div v-if="message.sender === 'assistant'" v-html="renderMarkdown(message.content)" />
               <div v-else>{{ message.content }}</div>
             </div>
+
+            <!-- Copy Button -->
+            <button
+              class="absolute transition-all p-1.5 rounded bg-primary/10 hover:bg-primary/20 dark:bg-primary/20 dark:hover:bg-primary/30 top-9"
+              :class="[message.sender === 'user' ? '-left-10' : '-right-10']"
+              @click="copyMessageContent(message)"
+              :title="t('chat.copy')"
+            >
+              <svg class="w-4 h-4 text-primary dark:text-primary/90" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -70,10 +72,23 @@
         </button>
       </form>
     </div>
+
+    <!-- Copy Success Alert -->
+    <div v-if="showCopyAlert"
+         class="fixed inset-0 flex items-center justify-center z-50">
+      <div class="bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 ease-out flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span>{{ t('chat.copySuccess') }}</span>
+      </div>
+    </div>
   </main>
 </template>
 
 <script setup>
+const showCopyAlert = ref(false);
+
 import { ref, watch, onMounted, computed, inject } from 'vue';
 import { marked } from 'marked';
 import hljs from 'highlight.js';
@@ -242,7 +257,12 @@ const copyMessageContent = async (message) => {
       textToCopy = tempDiv.textContent || tempDiv.innerText;
     }
     await navigator.clipboard.writeText(textToCopy);
-    // You could add a toast notification here if desired
+    
+    // Show and auto-hide copy success alert
+    showCopyAlert.value = true;
+    setTimeout(() => {
+      showCopyAlert.value = false;
+    }, 3000);
   } catch (error) {
     console.error('Failed to copy message:', error);
   }

@@ -6,7 +6,8 @@ export const translations = {
       you: 'You',
       assistant: 'Assistant',
       system: 'System',
-      copy: 'Copy message'
+      copy: 'Copy message',
+      copySuccess: 'Copied to clipboard!'
     },
     common: {
       settings: 'Settings',
@@ -42,7 +43,8 @@ export const translations = {
       you: '你',
       assistant: '助手',
       system: '系统',
-      copy: '复制消息'
+      copy: '复制消息',
+      copySuccess: '已复制到剪贴板！'
     },
     common: {
       settings: '设置',
