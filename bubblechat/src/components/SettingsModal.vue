@@ -15,7 +15,7 @@
         <div class="space-y-1 mb-4">
           <label class="block text-sm font-medium">{{ t('settings.language') }}</label>
           <select
-            v-model="commonSettings.language"
+            v-model="settings.language"
             class="w-full bg-surface-light dark:bg-surface-light-dark rounded px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:border-primary focus:outline-none"
           >
             <option value="en">English</option>
@@ -27,7 +27,7 @@
         <div class="space-y-1">
           <label class="block text-sm font-medium">{{ t('settings.theme') }}</label>
           <select
-            v-model="commonSettings.theme"
+            v-model="settings.theme"
             class="w-full bg-surface-light dark:bg-surface-light-dark rounded px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-100 focus:border-primary focus:outline-none"
           >
             <option value="light">{{ t('settings.light') }}</option>
@@ -82,7 +82,7 @@ const settings = ref({
 });
 
 const save = () => {
-  emit('save', { commonSettings: settings.value });
+  emit('save', settings.value);
   close();
 };
 
