@@ -17,7 +17,9 @@
                  :class="[message.sender === 'user' ? 'flex-row-reverse' : 'flex-row']">
               <span class="font-medium text-gray-900 dark:text-white">{{ messageTypes[message.sender].name }}</span>
               <span class="text-sm">{{ formatTime(message.timestamp) }}</span>
-              <span v-if="message.tokens" class="text-sm">{{ message.tokens }} tokens</span>
+              <span v-if="message.usage" class="text-sm text-gray-500 dark:text-gray-400">
+                ({{ message.usage.total_tokens }} tokens: {{ message.usage.prompt_tokens }} prompt + {{ message.usage.completion_tokens }} completion)
+              </span>
             </div>
             
             <!-- Message Content -->
@@ -154,7 +156,6 @@ const sendDeepseekMessage = async (content, messageHistory, settings, model) => 
           role: msg.sender === 'user' ? 'user' : 'assistant',
           content: msg.content
         }))
-        
       ],
       stream: false
     })
@@ -165,14 +166,18 @@ const sendDeepseekMessage = async (content, messageHistory, settings, model) => 
   }
 
   const data = await response.json();
-  console.log('response data: ',data)
   if (!data.choices?.[0]?.message?.content) {
     throw new Error('Invalid response format');
   }
-  console.log('return: ', data)
+
   return {
     content: data.choices?.[0]?.message?.content,
     sender: 'assistant',
+    usage: {
+      prompt_tokens: data.usage?.prompt_tokens,
+      completion_tokens: data.usage?.completion_tokens,
+      total_tokens: data.usage?.total_tokens
+    }
   };
 };
 
@@ -207,6 +212,11 @@ const sendSiliconflowMessage = async (content, messageHistory, settings, model) 
   return {
     content: data.choices?.[0]?.message?.content,
     sender: 'assistant',
+    usage: {
+      prompt_tokens: data.usage?.prompt_tokens,
+      completion_tokens: data.usage?.completion_tokens,
+      total_tokens: data.usage?.total_tokens
+    }
   };
 };
 
@@ -322,10 +332,7 @@ watch(() => props.messages.length, () => {
 </script>
 
 <style>
-/* Markdown styling */
-.markdown-body {
-  /* Colors handled by Tailwind classes in template */
-}
+
 
 .markdown-body pre {
   background-color: #f8f9fa; /* Light mode */
