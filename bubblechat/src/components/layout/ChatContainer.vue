@@ -185,17 +185,26 @@ const sendDeepseekMessage = async (content, messageHistory, settings, model) => 
 
   if (!data.choices[0]?.message?.reasoning_content) {
     return {
-    content: data.choices[0].message.content,
+    content: data.choices?.[0]?.message?.content,
     sender: 'assistant',
-  };
-  }
+    usage: {
+      	prompt_tokens: data.usage?.prompt_tokens,
+      	completion_tokens: data.usage?.completion_tokens,
+      	total_tokens: data.usage?.total_tokens
+      }
+    }
+    }
 
   const reasoningContent = data.choices[0]?.message?.reasoning_content;
   
   const responseObj = {
     content: data.choices[0].message.content,
     sender: 'assistant',
-  };
+    usage: {
+      	prompt_tokens: data.usage?.prompt_tokens,
+      	completion_tokens: data.usage?.completion_tokens,
+      	total_tokens: data.usage?.total_tokens}
+    };
 
   // Add reasoning_content if present
   if (reasoningContent) {
@@ -238,18 +247,30 @@ const sendSiliconflowMessage = async (content, messageHistory, settings, model) 
     sender: 'assistant',
   };
   }
-  // Get reasoning_content if available (for Deepseek-R1 model)
+  // Get reasoning_content if available
+
+  if (!data.choices[0]?.message?.reasoning_content) {
+    return {
+    content: data.choices?.[0]?.message?.content,
+    sender: 'assistant',
+    usage: {
+      	prompt_tokens: data.usage?.prompt_tokens,
+      	completion_tokens: data.usage?.completion_tokens,
+      	total_tokens: data.usage?.total_tokens
+      }
+    }
+    }
+
   const reasoningContent = data.choices[0]?.message?.reasoning_content;
   
   const responseObj = {
     content: data.choices[0].message.content,
     sender: 'assistant',
     usage: {
-      prompt_tokens: data.usage?.prompt_tokens,
-      completion_tokens: data.usage?.completion_tokens,
-      total_tokens: data.usage?.total_tokens
-    }
-  };
+      	prompt_tokens: data.usage?.prompt_tokens,
+      	completion_tokens: data.usage?.completion_tokens,
+      	total_tokens: data.usage?.total_tokens}
+    };
 
   // Add reasoning_content if present
   if (reasoningContent) {
