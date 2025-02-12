@@ -31,28 +31,34 @@ import SessionManager from './components/SessionManager.vue';
 
 const showAbout = ref(false);
 const language = ref(localStorage.getItem('app-language') || 'en');
-const isDarkTheme = ref(localStorage.getItem('app-theme') !== 'light');
+const isDarkTheme = ref(localStorage.getItem('app-theme') === 'dark');
 
-// Watch for settings changes
-watch([language, isDarkTheme], ([newLang, newIsDark]) => {
-  localStorage.setItem('app-language', newLang);
+// Watch for theme changes and apply them
+watch(isDarkTheme, (newIsDark) => {
+  document.documentElement.classList.toggle('dark', newIsDark);
   localStorage.setItem('app-theme', newIsDark ? 'dark' : 'light');
+}, { immediate: true });
+
+// Watch for language changes
+watch(language, (newLang) => {
+  localStorage.setItem('app-language', newLang);
 });
 
 // Handle settings updates from SettingsModal
 const handleSettingsUpdate = (settings) => {
-  if (settings.commonSettings) {
-    language.value = settings.commonSettings.language;
-    isDarkTheme.value = settings.commonSettings.theme === 'dark';
+  if (settings?.commonSettings) {
+    // Update language if provided
+    if (settings.commonSettings.language) {
+      language.value = settings.commonSettings.language;
+    }
+    
+    // Update theme if provided
+    if (settings.commonSettings.theme) {
+      isDarkTheme.value = settings.commonSettings.theme === 'dark';
+    }
   }
 };
 
 // Provide settings update handler to SessionManager
 provide('onSettingsUpdate', handleSettingsUpdate);
-
-// Initialize theme
-onMounted(() => {
-  // Apply initial theme
-  document.documentElement.classList.toggle('dark', isDarkTheme.value);
-});
 </script>

@@ -203,8 +203,12 @@ providers.forEach(provider => {
   }
 });
 
-// Load saved settings on mount
+const selectedProvider = ref(providers[0]);
+const selectedModel = ref(providers[0].models[0]);
+
+// Load saved settings and initialize selected provider/model on mount
 onMounted(() => {
+  // Load API settings
   const savedSettings = localStorage.getItem('api-settings');
   if (savedSettings) {
     const parsed = JSON.parse(savedSettings);
@@ -217,13 +221,19 @@ onMounted(() => {
       }
     });
   }
-});
 
-const selectedProvider = ref(providers.find(p => p.id === props.currentProvider) || providers[0]);
-const selectedModel = ref(
-  selectedProvider.value.models.find(m => m.id === props.currentModel) || 
-  selectedProvider.value.models[0]
-);
+  // Validate and set provider
+  const validProvider = providers.find(p => p.id === props.currentProvider);
+  if (validProvider) {
+    selectedProvider.value = validProvider;
+    
+    // Validate and set model for the selected provider
+    const validModel = validProvider.models.find(m => m.id === props.currentModel);
+    if (validModel) {
+      selectedModel.value = validModel;
+    }
+  }
+});
 
 const canTestConnection = computed(() => {
   if (!selectedProvider.value) return false;
