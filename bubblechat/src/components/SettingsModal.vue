@@ -82,24 +82,24 @@ const settings = ref({
 });
 
 const save = () => {
-  emit('save', settings.value);
+  // Wrap settings in the expected structure
+  emit('save', {
+    commonSettings: settings.value
+  });
+  
+  // Update localStorage
+  localStorage.setItem('app-language', settings.value.language);
+  localStorage.setItem('app-theme', settings.value.theme);
+  
   close();
 };
 
-// Load saved settings on mount
+// Initialize settings on mount
 onMounted(() => {
-  const savedSettings = localStorage.getItem('api-settings');
-  if (savedSettings) {
-    const parsed = JSON.parse(savedSettings);
-    Object.keys(parsed).forEach(providerId => {
-      if (settings.value[providerId]) {
-        settings.value[providerId] = {
-          ...settings.value[providerId],
-          ...parsed[providerId]
-        };
-      }
-    });
-  }
+  settings.value = {
+    language: localStorage.getItem('app-language') || 'en',
+    theme: localStorage.getItem('app-theme') || 'dark'
+  };
 });
 
 const close = () => {
