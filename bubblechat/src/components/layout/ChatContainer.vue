@@ -276,48 +276,7 @@ const handleStreamResponse = async (reader) => {
 };
 
 // Chat API functionality
-const sendDeepseekMessage = async (content, messageHistory, settings, model) => {
-  const response = await fetch(`${settings.baseUrl}`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${settings.apiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: model,
-      messages: [
-        ...messageHistory.map(msg => ({
-          role: msg.sender === 'user' ? 'user' : 'assistant',
-          content: msg.content
-        }))
-      ],
-      stream: true
-    })
-  });
-
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status}`);
-  }
-
-  if (!response.body) {
-    throw new Error('ReadableStream not supported');
-  }
-
-  isStreaming.value = true;
-  streamingContent.value = '';
-  streamingReasoningContent.value = '';
-  currentUsage.value = null;
-  retryCount.value = 0;
-
-  try {
-    const result = await handleStreamResponse(response.body.getReader());
-    return result;
-  } finally {
-    isStreaming.value = false;
-  }
-};
-
-const sendSiliconflowMessage = async (content, messageHistory, settings, model) => {
+const sendProviderMessage = async (content, messageHistory, settings, model) => {
   const response = await fetch(settings.baseUrl, {
     method: 'POST',
     headers: {
@@ -436,10 +395,8 @@ const sendMessage = async () => {
       
       // Get API response
       let response;
-      if (props.provider === 'deepseek') {
-        response = await sendDeepseekMessage(message, props.messages, props.settings, props.model);
-      } else if (props.provider === 'siliconflow') {
-        response = await sendSiliconflowMessage(message, props.messages, props.settings, props.model);
+      if (props.provider === 'deepseek' || props.provider === 'siliconflow') {
+        response = await sendProviderMessage(message, props.messages, props.settings, props.model);
       } else {
         throw new Error('Unknown provider');
       }
@@ -484,6 +441,49 @@ watch([() => props.messages.length, streamingContent, streamingReasoningContent]
   padding: 0.2rem 0.4rem;
   border-radius: 0.25rem;
   font-size: 0.875rem;
+}
+
+.dark .markdown-body code {
+  background-color: #374151; /* Dark mode - gray-700 */
+}
+
+.markdown-body pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+.markdown-body p {
+  margin: 1rem 0;
+}
+
+.markdown-body ul, .markdown-body ol {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+.markdown-body li {
+  margin: 0.5rem 0;
+}
+
+.markdown-body blockquote {
+  border-left: 4px solid #e5e7eb; /* Light mode - gray-200 */
+  margin: 1rem 0;
+  padding-left: 1rem;
+  color: #6b7280; /* Light mode - gray-500 */
+}
+
+.dark .markdown-body blockquote {
+  border-left: 4px solid #4b5563; /* Dark mode - gray-600 */
+  color: #9ca3af; /* Dark mode - gray-400 */
+}
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3, 
+.markdown-body h4, .markdown-body h5, .markdown-body h6 {
+  margin: 1.5rem 0 1rem;
+  font-weight: 600;
+}
+</style>
 }
 
 .dark .markdown-body code {
