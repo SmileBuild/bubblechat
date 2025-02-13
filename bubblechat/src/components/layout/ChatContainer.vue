@@ -28,14 +28,16 @@
               messageTypes[message.sender].class
             ]">
               <div v-if="message.sender === 'assistant'">
-                <div v-html="renderMarkdown(message.content)" />
+                <!-- Reasoning Content First -->
                 <div v-if="message.reasoning_content" 
-                     class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                     class="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
                   <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Reasoning</div>
                   <div class="text-sm bg-gray-50 dark:bg-gray-800 p-3 rounded">
                     {{ message.reasoning_content }}
                   </div>
                 </div>
+                <!-- Main Content -->
+                <div v-html="renderMarkdown(message.content)" />
               </div>
               <div v-else>{{ message.content }}</div>
             </div>
@@ -54,7 +56,34 @@
           </div>
         </div>
       </div>
-      <div v-if="isLoading" class="flex justify-start">
+
+      <!-- Streaming Message -->
+      <div v-if="isStreaming" class="flex justify-start">
+        <div class="flex gap-3 items-start max-w-3xl w-full">
+          <div class="w-8 h-8 shrink-0">
+            <img :src="messageTypes.assistant.avatar" alt="assistant" class="w-full h-full">
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1 text-gray-600 dark:text-gray-400">
+              <span class="font-medium text-gray-900 dark:text-white">{{ messageTypes.assistant.name }}</span>
+            </div>
+            <div class="p-4 rounded-lg relative markdown-body bg-surface dark:bg-surface-dark text-gray-800 dark:text-gray-100 shadow-sm">
+              <!-- Streaming Reasoning Content -->
+              <div v-if="streamingReasoningContent" class="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Reasoning</div>
+                <div class="text-sm bg-gray-50 dark:bg-gray-800 p-3 rounded">
+                  {{ streamingReasoningContent }}
+                </div>
+              </div>
+              <!-- Streaming Main Content -->
+              <div v-if="streamingContent" v-html="renderMarkdown(streamingContent)" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading Animation -->
+      <div v-if="isLoading && !isStreaming" class="flex justify-start">
         <div class="max-w-3xl p-4 rounded-lg bg-surface dark:bg-surface-dark text-gray-800 dark:text-gray-100">
           <div class="flex gap-2">
             <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
@@ -98,9 +127,7 @@
 </template>
 
 <script setup>
-const showCopyAlert = ref(false);
-
-import { ref, watch, onMounted, computed, inject } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { marked } from 'marked';
 import hljs from 'highlight.js';
 import { useTranslations } from '../../i18n/translations';
@@ -110,6 +137,14 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
+
+const showCopyAlert = ref(false);
+const streamingContent = ref('');
+const streamingReasoningContent = ref('');
+const isStreaming = ref(false);
+const currentUsage = ref(null);
+const retryCount = ref(0);
+const maxRetries = 3;
 
 const props = defineProps({
   messages: {
@@ -150,6 +185,96 @@ const formatTime = (timestamp) => {
   return dayjs(timestamp).fromNow();
 };
 
+// Handle streaming response
+const handleStreamResponse = async (reader) => {
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let fullContent = '';
+  let fullReasoningContent = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.trim() === '') continue;
+        if (line.startsWith('data: ')) {
+          const jsonData = line.slice(6);
+          if (jsonData.trim() === '[DONE]') continue;
+          
+          try {
+            const data = JSON.parse(jsonData);
+            // Handle reasoning_content separately
+            if (data.choices?.[0]?.delta?.reasoning_content !== undefined) {
+              const reasoningDelta = data.choices[0].delta.reasoning_content;
+              if (reasoningDelta !== null) {
+                fullReasoningContent += reasoningDelta;
+                streamingReasoningContent.value = fullReasoningContent;
+              }
+            }
+            // Handle main content
+            if (data.choices?.[0]?.delta?.content !== undefined) {
+              const contentDelta = data.choices[0].delta.content;
+              if (contentDelta !== null) {
+                fullContent += contentDelta;
+                streamingContent.value = fullContent;
+              }
+            }
+            if (data.usage) {
+              currentUsage.value = data.usage;
+            }
+          } catch (e) {
+            console.error('Error parsing streaming data:', e);
+          }
+        }
+      }
+    }
+
+    // Process any remaining buffer
+    if (buffer) {
+      try {
+        const data = JSON.parse(buffer.slice(6));
+        if (data.choices?.[0]?.delta?.reasoning_content) {
+          fullReasoningContent += data.choices[0].delta.reasoning_content;
+          streamingReasoningContent.value = fullReasoningContent;
+        }
+        if (data.choices?.[0]?.delta?.content) {
+          fullContent += data.choices[0].delta.content;
+          streamingContent.value = fullContent;
+        }
+      } catch (e) {
+        console.error('Error parsing final buffer:', e);
+      }
+    }
+
+    return {
+      content: fullContent,
+      reasoning_content: fullReasoningContent || null,
+      usage: currentUsage.value,
+      sender: 'assistant'
+    };
+  } catch (error) {
+    console.error('Streaming error:', error);
+    if (retryCount.value < maxRetries) {
+      retryCount.value++;
+      console.log(`Retrying... Attempt ${retryCount.value} of ${maxRetries}`);
+      // Return current state and continue streaming
+      return {
+        content: fullContent,
+        reasoning_content: fullReasoningContent || null,
+        usage: currentUsage.value,
+        sender: 'assistant'
+      };
+    }
+    throw error;
+  }
+};
+
 // Chat API functionality
 const sendDeepseekMessage = async (content, messageHistory, settings, model) => {
   const response = await fetch(`${settings.baseUrl}`, {
@@ -165,9 +290,8 @@ const sendDeepseekMessage = async (content, messageHistory, settings, model) => 
           role: msg.sender === 'user' ? 'user' : 'assistant',
           content: msg.content
         }))
-        
       ],
-      stream: false
+      stream: true
     })
   });
 
@@ -175,43 +299,22 @@ const sendDeepseekMessage = async (content, messageHistory, settings, model) => 
     throw new Error(`API error: ${response.status}`);
   }
 
-  const data = await response.json();
-  console.log('response data: ',data)
-  if (!data.choices?.[0]?.message?.content) {
-    throw new Error('Invalid response format');
+  if (!response.body) {
+    throw new Error('ReadableStream not supported');
   }
 
-  // Get reasoning_content if available
+  isStreaming.value = true;
+  streamingContent.value = '';
+  streamingReasoningContent.value = '';
+  currentUsage.value = null;
+  retryCount.value = 0;
 
-  if (!data.choices[0]?.message?.reasoning_content) {
-    return {
-    content: data.choices?.[0]?.message?.content,
-    sender: 'assistant',
-    usage: {
-      	prompt_tokens: data.usage?.prompt_tokens,
-      	completion_tokens: data.usage?.completion_tokens,
-      	total_tokens: data.usage?.total_tokens
-      }
-    }
-    }
-
-  const reasoningContent = data.choices[0]?.message?.reasoning_content;
-  
-  const responseObj = {
-    content: data.choices[0].message.content,
-    sender: 'assistant',
-    usage: {
-      	prompt_tokens: data.usage?.prompt_tokens,
-      	completion_tokens: data.usage?.completion_tokens,
-      	total_tokens: data.usage?.total_tokens}
-    };
-
-  // Add reasoning_content if present
-  if (reasoningContent) {
-    responseObj.reasoning_content = reasoningContent;
+  try {
+    const result = await handleStreamResponse(response.body.getReader());
+    return result;
+  } finally {
+    isStreaming.value = false;
   }
-
-  return responseObj;
 };
 
 const sendSiliconflowMessage = async (content, messageHistory, settings, model) => {
@@ -229,7 +332,7 @@ const sendSiliconflowMessage = async (content, messageHistory, settings, model) 
           content: msg.content
         }))
       ],
-      stream: false
+      stream: true
     })
   });
 
@@ -237,47 +340,22 @@ const sendSiliconflowMessage = async (content, messageHistory, settings, model) 
     throw new Error(`API error: ${response.status}`);
   }
 
-  const data = await response.json();
-  if (!data.choices?.[0]?.message?.content) {
-    throw new Error('Invalid response format');
-  }
-  if (!data.choices[0]?.message?.reasoning_content) {
-    return {
-    content: data.choices[0].message.content,
-    sender: 'assistant',
-  };
-  }
-  // Get reasoning_content if available
-
-  if (!data.choices[0]?.message?.reasoning_content) {
-    return {
-    content: data.choices?.[0]?.message?.content,
-    sender: 'assistant',
-    usage: {
-      	prompt_tokens: data.usage?.prompt_tokens,
-      	completion_tokens: data.usage?.completion_tokens,
-      	total_tokens: data.usage?.total_tokens
-      }
-    }
-    }
-
-  const reasoningContent = data.choices[0]?.message?.reasoning_content;
-  
-  const responseObj = {
-    content: data.choices[0].message.content,
-    sender: 'assistant',
-    usage: {
-      	prompt_tokens: data.usage?.prompt_tokens,
-      	completion_tokens: data.usage?.completion_tokens,
-      	total_tokens: data.usage?.total_tokens}
-    };
-
-  // Add reasoning_content if present
-  if (reasoningContent) {
-    responseObj.reasoning_content = reasoningContent;
+  if (!response.body) {
+    throw new Error('ReadableStream not supported');
   }
 
-  return responseObj;
+  isStreaming.value = true;
+  streamingContent.value = '';
+  streamingReasoningContent.value = '';
+  currentUsage.value = null;
+  retryCount.value = 0;
+
+  try {
+    const result = await handleStreamResponse(response.body.getReader());
+    return result;
+  } finally {
+    isStreaming.value = false;
+  }
 };
 
 const newMessage = ref('');
@@ -354,7 +432,7 @@ const sendMessage = async () => {
   if (message && !props.isLoading) {
     try {
       newMessage.value = '';
-      emit('send-message',message);
+      emit('send-message', message);
       
       // Get API response
       let response;
@@ -366,8 +444,6 @@ const sendMessage = async () => {
         throw new Error('Unknown provider');
       }
       
-      console.error('Message Error:', message);
-      console.error('response Error:', response);
       // Emit response back with timestamp
       emit('send-message', message, response);
     } catch (error) {
@@ -380,8 +456,8 @@ const sendMessage = async () => {
   }
 };
 
-// Auto scroll to bottom when new messages arrive
-watch(() => props.messages.length, () => {
+// Auto scroll to bottom when new messages arrive or streaming content updates
+watch([() => props.messages.length, streamingContent, streamingReasoningContent], () => {
   setTimeout(() => {
     if (messagesContainer.value) {
       messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
@@ -391,8 +467,6 @@ watch(() => props.messages.length, () => {
 </script>
 
 <style>
-
-
 .markdown-body pre {
   background-color: #f8f9fa; /* Light mode */
   border-radius: 0.5rem;
