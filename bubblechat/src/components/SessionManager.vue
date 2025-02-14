@@ -111,14 +111,23 @@ const currentMessages = computed(() => {
   return session ? session.messages : [];
 });
 
-// Load sessions on mount
+// Load sessions and API settings on mount
 onMounted(() => {
+  // Load saved sessions
   const savedSessions = loadSessions();
   if (savedSessions.length > 0) {
     sessions.value = savedSessions;
     activeSessionId.value = savedSessions[0].id;
   } else {
     createNewChat();
+  }
+
+  // Load saved API settings
+  const savedApiSettings = localStorage.getItem('api-settings');
+  if (savedApiSettings) {
+    const parsedSettings = JSON.parse(savedApiSettings);
+    // Initialize apiSettings with the current provider's settings if they exist
+    apiSettings.value = parsedSettings[currentAPI.value.provider] || {};
   }
 });
 
