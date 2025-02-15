@@ -34,6 +34,12 @@ export const translations = {
       testConnection: 'Test Connection',
       testing: 'Testing...',
       viewApiDocs: 'View API Documentation'
+    },
+    about: {
+      title: 'About BubbleChat',
+      description: 'DEEPSEEK CHAT CLINET ONLY. DEEPSEEK MODELS BASE ON DIFFERENT API',
+      githubLink: 'View on GitHub',
+      close: 'Close'
     }
   },
   zh: {
@@ -71,6 +77,12 @@ export const translations = {
       testConnection: '测试连接',
       testing: '测试中...',
       viewApiDocs: '查看 API 文档'
+    },
+    about: {
+      title: '关于 BubbleChat',
+      description: 'DEEPSEEK客户端，基于全网各平台API',
+      githubLink: '在 GitHub 上查看',
+      close: '关闭'
     }
   }
 };
