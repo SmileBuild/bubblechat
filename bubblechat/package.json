@@ -2,24 +2,61 @@
   "name": "bubblechat",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
+  "main": "electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"vite\" \"electron .\"",
+    "electron:build": "vite build && electron-builder",
+    "electron:preview": "vite build && electron ."
   },
   "dependencies": {
+    "concurrently": "^9.1.2",
     "dayjs": "^1.11.13",
     "dompurify": "^3.0.8",
+    "electron": "^34.2.0",
+    "electron-builder": "^25.1.8",
     "highlight.js": "^11.9.0",
     "marked": "^11.2.0",
+    "vite-plugin-electron": "^0.29.0",
     "vue": "^3.3.11"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.5.2",
     "autoprefixer": "^10.4.16",
+    "concurrently": "^8.2.2",
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.4.0",
-    "vite": "^5.0.8"
+    "vite": "^5.0.8",
+    "vite-plugin-electron": "^0.15.5"
+  },
+  "build": {
+    "appId": "com.bubblechat.app",
+    "productName": "BubbleChat",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.productivity"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   }
 }
