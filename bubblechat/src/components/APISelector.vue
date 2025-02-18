@@ -186,6 +186,26 @@ const providers = [
         description: 'Advanced reasoning model'
       }
     ]
+  },
+  {
+    id: 'aliyun',
+    name: 'Aliyun',
+    icon: 'smart_toy',
+    description: 'Aliyun AI services with DeepSeek models',
+    docUrl: 'https://help.aliyun.com/document_detail/613695.html',
+    defaultBaseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',
+    models: [
+      {
+        id: 'deepseek-v3',
+        name: 'deepseek-v3',
+        description: 'Advanced language model for general purpose tasks'
+      },
+      {
+        id: 'deepseek-r1',
+        name: 'deepseek-r1',
+        description: 'Specialized model for reasoning tasks'
+      }
+    ]
   }
 ];
 

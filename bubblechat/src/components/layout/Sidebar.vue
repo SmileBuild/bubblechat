@@ -145,7 +145,21 @@ const currentAPI = ref({
 });
 
 const currentAPIDisplay = computed(() => {
-  const provider = currentAPI.value.provider === 'deepseek' ? 'DeepSeek' : 'Siliconflow';
+  let provider;
+  switch (currentAPI.value.provider) {
+    case 'deepseek':
+      provider = 'DeepSeek';
+      break;
+    case 'siliconflow':
+      provider = 'Siliconflow';
+      break;
+    case 'aliyun':
+      provider = 'Aliyun';
+      break;
+    default:
+      provider = currentAPI.value.provider;
+  }
+  
   let model = currentAPI.value.model;
   if (model.includes('/')) {
     model = model.split('/')[1]; // For Siliconflow models
