@@ -1,0 +1,65 @@
+<svg width="200" height="140" viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient definitions -->
+  <defs>
+    <linearGradient id="whaleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#65B7E6"/>
+      <stop offset="100%" stop-color="#4A90E2"/>
+    </linearGradient>
+    <radialGradient id="highlightGradient" cx="40%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Main body -->
+  <path d="
+    M 180 70
+    C 180 90, 160 110, 140 110
+    H 60
+    C 30 110, 20 70, 20 70
+    C 20 70, 30 30, 60 30
+    H 140
+    C 160 30, 180 50, 180 70
+    Z" 
+    fill="url(#whaleGradient)"/>
+  
+  <!-- Surface highlight -->
+  <path d="
+    M 180 70
+    C 180 90, 160 110, 140 110
+    H 60
+    C 30 110, 20 70, 20 70
+    C 20 70, 30 30, 60 30
+    H 140
+    C 160 30, 180 50, 180 70
+    Z" 
+    fill="url(#highlightGradient)"/>
+    
+  <!-- Eye -->
+  <circle cx="60" cy="65" r="8" fill="#2C3E50"/>
+  <circle cx="62" cy="63" r="3" fill="white"/>
+  
+  <!-- Tail details -->
+  <path d="
+    M 165 75
+    C 175 73, 185 70, 188 68
+    C 191 66, 191 74, 188 76
+    C 185 78, 175 77, 165 75
+    Z" 
+    fill="#4A90E2"/>
+    
+  <!-- Back details -->
+  <path d="
+    M 100 40
+    Q 110 35, 120 40
+    Q 110 45, 100 40
+    Z" 
+    fill="#4A90E2" opacity="0.5"/>
+  
+  <path d="
+    M 80 35
+    Q 90 30, 100 35
+    Q 90 40, 80 35
+    Z" 
+    fill="#4A90E2" opacity="0.5"/>
+</svg>

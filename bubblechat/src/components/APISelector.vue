@@ -155,7 +155,7 @@ const providers = [
     icon: 'smart_toy',
     description: 'Advanced AI model for chat and reasoning',
     docUrl: 'https://platform.deepseek.com/docs',
-    defaultBaseUrl: 'https://api.deepseek.com',
+    defaultBaseUrl: 'https://api.deepseek.com/chat/completions/',
     models: [
       {
         id: 'deepseek-chat',
@@ -173,6 +173,7 @@ const providers = [
     id: 'siliconflow',
     name: 'Siliconflow',
     icon: 'smart_toy',
+    defaultBaseUrl: 'https://api.siliconflow.com/v1/chat/completions',
     description: 'Deepseek API services via Siliconflow',
     models: [
       {

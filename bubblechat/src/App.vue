@@ -1,5 +1,6 @@
 <template>
   <div :class="{'dark': isDarkTheme}">
+    <LoadingWhale :show="isLoading" />
     <div class="min-h-screen bg-background dark:bg-background-dark text-gray-900 dark:text-white">
       <SessionManager 
         @show-about="showAbout = true"
@@ -38,9 +39,11 @@
 <script setup>
 import { ref, onMounted, watch, provide, computed } from 'vue';
 import SessionManager from './components/SessionManager.vue';
+import LoadingWhale from './components/LoadingWhale.vue';
 import { useTranslations } from './i18n/translations';
 
 const showAbout = ref(false);
+const isLoading = ref(true);
 const language = ref(localStorage.getItem('app-language') || 'en');
 const isDarkTheme = ref(localStorage.getItem('app-theme') === 'dark');
 const t = computed(() => useTranslations(language.value));
@@ -70,6 +73,19 @@ const handleSettingsUpdate = (settings) => {
     }
   }
 };
+
+// Handle loading state
+onMounted(() => {
+  // Show loading animation for 2 seconds on initial mount
+  setTimeout(() => {
+    isLoading.value = false;
+  }, 2000);
+});
+
+// Reset loading state on page refresh/navigation
+window.addEventListener('beforeunload', () => {
+  isLoading.value = true;
+});
 
 // Provide settings update handler to SessionManager
 provide('onSettingsUpdate', handleSettingsUpdate);
