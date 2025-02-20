@@ -1,5 +1,11 @@
 <template>
   <aside class="h-screen w-64 flex flex-col border-r bg-surface dark:bg-surface-dark border-gray-200 dark:border-gray-700">
+    <!-- Brand Logo -->
+    <div class="flex items-center gap-3 p-4 border-b border-gray-200 dark:border-gray-700">
+      <img :src="whaleIcon" alt="BubbleChat Logo" class="w-8 h-8" />
+      <h1 class="text-xl font-semibold text-gray-800 dark:text-white">BubbleChat</h1>
+    </div>
+
     <SettingsModal 
       :is-open="isSettingsOpen"
       :language="language"
@@ -95,6 +101,7 @@ import { ref, watch, computed, onMounted } from 'vue';
 import { useTranslations } from '../../i18n/translations';
 import SettingsModal from '../SettingsModal.vue';
 import APISelector from '../APISelector.vue';
+import whaleIcon from '../../assets/whale.svg';
 
 const props = defineProps({
   sessions: {
