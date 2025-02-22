@@ -395,7 +395,7 @@ const sendMessage = async () => {
       
       // Get API response
       let response;
-      if (props.provider === 'deepseek' || props.provider === 'siliconflow' || props.provider === 'aliyun') {
+      if (props.provider === 'deepseek' || props.provider === 'siliconflow' || props.provider === 'aliyun' || props.provider === 'volcengine') {
         response = await sendProviderMessage(message, props.messages, props.settings, props.model);
       } else {
         throw new Error('Unknown provider');

@@ -163,6 +163,9 @@ const currentAPIDisplay = computed(() => {
     case 'aliyun':
       provider = 'Aliyun';
       break;
+    case 'volcengine':
+      provider = 'Volcengine';
+      break;
     default:
       provider = currentAPI.value.provider;
   }

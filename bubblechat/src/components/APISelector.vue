@@ -170,6 +170,26 @@ const providers = [
     ]
   },
   {
+    id: 'volcengine',
+    name: 'Volcengine',
+    icon: 'smart_toy',
+    description: 'Volcengine AI services with DeepSeek models',
+    docUrl: 'https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint',
+    defaultBaseUrl: '/api/v3/chat/completions',
+    models: [
+      {
+        id: 'ep-20250222222622-rccqb',
+        name: 'DeepSeek V3',
+        description: 'Advanced language model released on 2024/12/26'
+      },
+      {
+        id: 'ep-20250222222746-956z2',
+        name: 'DeepSeek R1',
+        description: 'Latest reasoning model released on 2025/01/20'
+      }
+    ]
+  },
+  {
     id: 'siliconflow',
     name: 'Siliconflow',
     icon: 'smart_toy',
